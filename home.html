@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZONORG - Sustainable Farming Game</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(45deg, #87CEEB 0%, #98FB98 25%, #90EE90 50%, #32CD32 75%, #228B22 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            color: #2F4F2F;
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hero-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-bottom: 4px solid #228B22;
+            padding: 60px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100"><path fill="%2390EE90" opacity="0.1" d="M0,20 Q250,0 500,20 T1000,20 L1000,100 L0,100 Z"/></svg>');
+            background-size: cover;
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 4em;
+            color: #228B22;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            animation: bounce 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-10px); }
+        }
+
+        .tagline {
+            font-size: 1em;
+            color: #2F4F2F;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .subtitle {
+            font-size: 0.7em;
+            color: #666;
+            margin-bottom: 40px;
+            line-height: 1.4;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        /* Education Section Styles */
+        .education-section {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 80px 20px;
+            border-bottom: 3px solid #32CD32;
+        }
+
+        .education-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .education-content h2 {
+            font-size: 2.5em;
+            color: #228B22;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .section-subtitle {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 50px;
+            line-height: 1.5;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .practice-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .practice-card {
+            background: linear-gradient(145deg, #f8fff8, #e8f5e8);
+            border: 3px solid #90EE90;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .practice-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(144, 238, 144, 0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.6s ease;
+            opacity: 0;
+        }
+
+        .practice-card:hover {
+            transform: translateY(-8px);
+            border-color: #32CD32;
+            box-shadow: 0 15px 35px rgba(50, 205, 50, 0.2);
+        }
+
+        .practice-card:hover::before {
+            opacity: 1;
+            animation: shimmer 1.5s ease-in-out;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .practice-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .practice-card h3 {
+            font-size: 1.1em;
+            color: #228B22;
+            margin-bottom: 15px;
+        }
+
+        .practice-card p {
+            font-size: 0.7em;
+            color: #444;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .practice-benefit {
+            background: #228B22;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.6em;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        .sustainability-stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 30px;
+            background: linear-gradient(135deg, #228B22, #32CD32);
+            padding: 40px;
+            border-radius: 20px;
+            color: white;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .stat-label {
+            font-size: 0.7em;
+            opacity: 0.9;
+        }
+
+        /* Features Section Styles */
+        .features-section {
+            background: linear-gradient(135deg, #E6FFE6, #F0FFF0);
+            padding: 80px 20px;
+            border-bottom: 3px solid #32CD32;
+        }
+
+        .features-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .features-content h2 {
+            font-size: 2.5em;
+            color: #228B22;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .feature-card {
+            background: white;
+            border: 3px solid #90EE90;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: #32CD32;
+            box-shadow: 0 10px 25px rgba(50, 205, 50, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .feature-card h3 {
+            font-size: 1em;
+            color: #228B22;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            font-size: 0.7em;
+            color: #444;
+            line-height: 1.5;
+        }
+
+        /* Call to Action Section */
+        .cta-section {
+            background: linear-gradient(135deg, #228B22, #32CD32);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .cta-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta-content h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .cta-content p {
+            font-size: 0.9em;
+            margin-bottom: 40px;
+            opacity: 0.95;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-primary {
+            background: #FFD700 !important;
+            color: #228B22 !important;
+            border-color: #FFD700 !important;
+            font-weight: bold;
+        }
+
+        .cta-primary:hover {
+            background: #FFA500 !important;
+            border-color: #FFA500 !important;
+            transform: translateY(-3px);
+        }
+
+        .cta-secondary {
+            background: transparent !important;
+            color: white !important;
+            border-color: white !important;
+        }
+
+        .cta-secondary:hover {
+            background: white !important;
+            color: #228B22 !important;
+        }
+
+        .btn {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8em;
+            padding: 18px 35px;
+            border: 3px solid #228B22;
+            background: linear-gradient(145deg, #32CD32, #228B22);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(34, 139, 34, 0.3);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            background: linear-gradient(145deg, #228B22, #1e7e1e);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(34, 139, 34, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(145deg, #4682B4, #2F4F4F);
+            border-color: #4682B4;
+            box-shadow: 0 4px 15px rgba(70, 130, 180, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(145deg, #2F4F4F, #1a3333);
+            border-color: #2F4F4F;
+            box-shadow: 0 8px 25px rgba(47, 79, 79, 0.4);
+        }
+
+        .btn-guest {
+            background: linear-gradient(145deg, #FF8C00, #FF6347);
+            border-color: #FF8C00;
+            box-shadow: 0 4px 15px rgba(255, 140, 0, 0.3);
+        }
+
+        .btn-guest:hover {
+            background: linear-gradient(145deg, #FF6347, #e55347);
+            border-color: #FF6347;
+            box-shadow: 0 8px 25px rgba(255, 99, 71, 0.4);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: #fff;
+            margin: 5% auto;
+            padding: 0;
+            border: 4px solid #228B22;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 450px;
+            position: relative;
+            animation: slideIn 0.3s ease;
+        }
+
+        .modal-header {
+            background: #228B22;
+            color: white;
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close {
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #FFD700;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #228B22;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: #f0f0f0;
+            border: none;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7em;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: #228B22;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.7em;
+            color: #2F4F2F;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #228B22;
+        }
+
+        .form-submit {
+            width: 100%;
+            padding: 15px;
+            background: #228B22;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .form-submit:hover {
+            background: #32CD32;
+        }
+
+        .form-submit:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .error {
+            color: #FF4500;
+            font-size: 0.6em;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .success {
+            color: #228B22;
+            font-size: 0.6em;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .user-welcome {
+            background: #E6FFE6;
+            border: 2px solid #228B22;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .user-welcome h3 {
+            color: #228B22;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .user-info {
+            font-size: 0.7em;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Features Modal Specific Styles */
+        .features-modal-content {
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .features-content {
+            text-align: left;
+            line-height: 1.6;
+            font-size: 0.7em;
+        }
+
+        .features-content h4 {
+            color: #228B22;
+            margin: 15px 0 10px 0;
+            font-size: 0.9em;
+        }
+
+        .features-content ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .features-content li {
+            margin-bottom: 8px;
+        }
+
+        .features-content strong {
+            color: #2F4F2F;
+        }
+
+        .features-summary {
+            margin-top: 20px;
+            padding: 15px;
+            background: #E6FFE6;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .features-summary p {
+            font-size: 0.7em;
+            color: #2F4F2F;
+            margin: 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 40px 15px;
+            }
+            
+            .logo {
+                font-size: 2.5em;
+            }
+            
+            .tagline {
+                font-size: 0.8em;
+            }
+            
+            .subtitle {
+                font-size: 0.6em;
+            }
+            
+            .btn {
+                font-size: 0.7em;
+                padding: 15px 25px;
+            }
+            
+            .education-section,
+            .features-section {
+                padding: 50px 15px;
+            }
+            
+            .education-content h2,
+            .features-content h2 {
+                font-size: 2em;
+            }
+            
+            .practice-cards {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .sustainability-stats {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .stat-number {
+                font-size: 2em;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .cta-content h2 {
+                font-size: 1.5em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 2em;
+            }
+            
+            .practice-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .practice-card {
+                padding: 20px;
+            }
+            
+            .feature-card {
+                padding: 20px;
+            }
+            
+            .sustainability-stats {
+                padding: 25px;
+            }
+        }
+
+        /* Scroll animations - cards are visible by default */
+        .practice-card,
+        .feature-card {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Enhanced hover effects */
+        .practice-card:hover,
+        .feature-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: #32CD32;  
+            box-shadow: 0 15px 35px rgba(50, 205, 50, 0.3);
+            background: linear-gradient(145deg, #f0fff0, #e6ffe6);
+        }
+
+        /* Subtle entrance animation for users who prefer motion */
+        @media (prefers-reduced-motion: no-preference) {
+            .practice-card,
+            .feature-card {
+                animation: gentleFadeIn 0.8s ease-out;
+            }
+            
+            .practice-card:nth-child(1) { animation-delay: 0.1s; }
+            .practice-card:nth-child(2) { animation-delay: 0.15s; }
+            .practice-card:nth-child(3) { animation-delay: 0.2s; }
+            .practice-card:nth-child(4) { animation-delay: 0.25s; }
+            .practice-card:nth-child(5) { animation-delay: 0.3s; }
+            .practice-card:nth-child(6) { animation-delay: 0.35s; }
+        }
+
+        @keyframes gentleFadeIn {
+            from {
+                opacity: 0.3;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Highlight effect on hover */
+        .practice-card:hover .practice-icon {
+            transform: scale(1.1);
+            transition: transform 0.3s ease;
+        }
+
+        .practice-card:hover .practice-benefit {
+            background: #32CD32;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(50, 205, 50, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <div class="logo">🌾 ZONORG</div>
+                <div class="tagline">
+                    Master Sustainable Farming Through Interactive Gaming
+                </div>
+                <div class="subtitle">
+                    Learn eco-friendly practices • Grow diverse crops • Protect our planet's future
+                </div>
+
+                <div id="userSection">
+                    <!-- This will be populated by JavaScript -->
+                </div>
+
+                <div class="button-group" id="authButtons">
+                    <button class="btn" id="loginBtn">🔑 Login & Start Farming</button>
+                    <button class="btn btn-guest" id="guestBtn">🎮 Try Demo Mode</button>
+                    <button class="btn btn-secondary" id="registerBtn">📝 Join Our Community</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sustainable Farming Education Section -->
+        <section class="education-section">
+            <div class="education-content">
+                <h2>🌱 Learn Sustainable Farming</h2>
+                <p class="section-subtitle">Discover eco-friendly practices that protect our environment while maximizing harvest yields</p>
+                
+                <div class="practice-cards">
+                    <div class="practice-card">
+                        <div class="practice-icon">🔄</div>
+                        <h3>Crop Rotation</h3>
+                        <p>Rotate different crops to maintain soil health, prevent pest buildup, and naturally restore nutrients. Each crop family contributes differently to soil fertility.</p>
+                        <div class="practice-benefit">Increases yield by 20-30%</div>
+                    </div>
+                    
+                    <div class="practice-card">
+                        <div class="practice-icon">💧</div>
+                        <h3>Water Conservation</h3>
+                        <p>Efficient irrigation systems and water-wise crop selection reduce water usage while maintaining healthy growth. Every drop counts for our future.</p>
+                        <div class="practice-benefit">Saves 40% more water</div>
+                    </div>
+                    
+                    <div class="practice-card">
+                        <div class="practice-icon">🌿</div>
+                        <h3>Soil Health</h3>
+                        <p>Healthy soil is the foundation of sustainable farming. Use compost, avoid over-tilling, and maintain organic matter for thriving ecosystems.</p>
+                        <div class="practice-benefit">Improves soil quality 50%</div>
+                    </div>
+                    
+                    <div class="practice-card">
+                        <div class="practice-icon">🐛</div>
+                        <h3>Natural Pest Control</h3>
+                        <p>Beneficial insects, companion planting, and integrated pest management reduce chemical pesticide use while protecting crops naturally.</p>
+                        <div class="practice-benefit">Reduces chemicals 60%</div>
+                    </div>
+                    
+                    <div class="practice-card">
+                        <div class="practice-icon">🌡️</div>
+                        <h3>Climate Adaptation</h3>
+                        <p>Choose climate-resilient crops, monitor weather patterns, and adapt farming practices to changing environmental conditions.</p>
+                        <div class="practice-benefit">Weather resistance +45%</div>
+                    </div>
+                    
+                    <div class="practice-card">
+                        <div class="practice-icon">♻️</div>
+                        <h3>Circular Agriculture</h3>
+                        <p>Minimize waste through composting, renewable energy use, and sustainable resource management. Create closed-loop systems.</p>
+                        <div class="practice-benefit">Waste reduction 70%</div>
+                    </div>
+                </div>
+                
+                <div class="sustainability-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">85%</div>
+                        <div class="stat-label">Soil Degradation Prevented</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">60%</div>
+                        <div class="stat-label">Water Usage Reduced</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">40%</div>
+                        <div class="stat-label">Biodiversity Increased</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">75%</div>
+                        <div class="stat-label">Carbon Footprint Cut</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Game Features Section -->
+        <section class="features-section">
+            <div class="features-content">
+                <h2>🎮 Game Features</h2>
+                <p class="section-subtitle">Experience realistic farming simulation with educational gameplay</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🌦️</div>
+                        <h3>Dynamic Weather</h3>
+                        <p>Real-time weather systems affect crop growth, irrigation needs, and harvest timing. Adapt your strategy to changing conditions.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Sustainability Metrics</h3>
+                        <p>Track your environmental impact with detailed metrics on soil health, water usage, carbon footprint, and biodiversity.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🧑‍🌾</div>
+                        <h3>AI Farm Buddy</h3>
+                        <p>Your intelligent farming assistant provides tips, celebrates achievements, and guides you through sustainable practices.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🔧</div>
+                        <h3>Eco-Tools System</h3>
+                        <p>Unlock sustainable farming tools like solar irrigation, compost makers, and efficient harvesting equipment.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🌱</div>
+                        <h3>5 Crop Varieties</h3>
+                        <p>Grow wheat, carrots, pumpkins, tomatoes, and corn. Each crop has unique growth patterns and sustainability benefits.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">☁️</div>
+                        <h3>Cloud Save System</h3>
+                        <p>Your farm progress is safely stored in the cloud. Play anywhere, anytime, and never lose your sustainable farming journey.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Call to Action Section -->
+        <section class="cta-section">
+            <div class="cta-content">
+                <h2>� Start Your Sustainable Farm Today!</h2>
+                <p>Join thousands of players learning eco-friendly farming practices while having fun</p>
+                <div class="cta-buttons">
+                    <button class="btn cta-primary" onclick="document.getElementById('loginBtn').click()">🌟 Join the Movement</button>
+                    <button class="btn cta-secondary" onclick="document.getElementById('guestBtn').click()">🎮 Try Demo First</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+        <!-- Authentication Modal -->
+        <div id="authModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalTitle">Authentication</h2>
+                    <span class="close" id="closeModal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="tab-nav">
+                        <div class="tab" id="loginTab">Login</div>
+                        <div class="tab" id="registerTab">Register</div>
+                    </div>                    <!-- Login Form -->
+                    <div id="loginTabContent" class="tab-content active">
+                        <form id="loginForm">
+                            <div class="form-group">
+                                <label for="loginUsername">Username or Email:</label>
+                                <input type="text" id="loginUsername" name="usernameOrEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="loginPassword">Password:</label>
+                                <input type="password" id="loginPassword" name="password" required>
+                            </div>
+                                                        <button type="submit" id="loginSubmit">Login</button>
+                        </form>
+                    </div>
+
+                    <!-- Register Form -->
+                    <div id="registerTabContent" class="tab-content">
+                        <form id="registerForm">
+                            <div class="form-group">
+                                <label for="registerUsername">Username:</label>
+                                <input type="text" id="registerUsername" name="username" required minlength="3">
+                            </div>
+                            <div class="form-group">
+                                <label for="registerEmail">Email:</label>
+                                <input type="email" id="registerEmail" name="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="registerDisplayName">Display Name (Optional):</label>
+                                <input type="text" id="registerDisplayName" name="displayName">
+                            </div>
+                            <div class="form-group">
+                                <label for="registerPassword">Password:</label>
+                                <input type="password" id="registerPassword" name="password" required minlength="6">
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm Password:</label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" required>
+                            </div>
+                                                        <button type="submit" id="registerSubmit">Register</button>
+                        </form>
+                    </div>
+
+                    <div id="authMessage"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Base URL
+        const API_BASE = window.location.origin + '/api';
+        
+        // Current user state
+        let currentUser = null;
+        let authToken = null;
+
+        // Interactive features for enhanced user experience
+        function addInteractiveFeatures() {
+            // Animated counter for sustainability stats
+            const animateCounters = () => {
+                const counters = document.querySelectorAll('.stat-number');
+                const targets = [85, 60, 40, 75]; // Target values for each counter
+                
+                counters.forEach((counter, index) => {
+                    const target = targets[index];
+                    let current = 0;
+                    const increment = target / 50; // Animation speed
+                    
+                    const updateCounter = () => {
+                        if (current < target) {
+                            current += increment;
+                            counter.textContent = Math.floor(current) + '%';
+                            requestAnimationFrame(updateCounter);
+                        } else {
+                            counter.textContent = target + '%';
+                        }
+                    };
+                    
+                    // Start animation when element is visible
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                updateCounter();
+                                observer.unobserve(entry.target);
+                            }
+                        });
+                    });
+                    
+                    observer.observe(counter);
+                });
+            };
+
+            // Smooth scrolling for internal links
+            const addSmoothScrolling = () => {
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const target = document.querySelector(this.getAttribute('href'));
+                        if (target) {
+                            target.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }
+                    });
+                });
+            };
+
+            // Parallax effect for hero section
+            const addParallaxEffect = () => {
+                const heroSection = document.querySelector('.hero-section');
+                if (heroSection) {
+                    window.addEventListener('scroll', () => {
+                        const scrolled = window.pageYOffset;
+                        const rate = scrolled * -0.5;
+                        heroSection.style.transform = `translateY(${rate}px)`;
+                    });
+                }
+            };
+
+            // Card hover animations with random delays
+            const enhanceCardAnimations = () => {
+                const cards = document.querySelectorAll('.practice-card, .feature-card');
+                cards.forEach((card, index) => {
+                    card.addEventListener('mouseenter', () => {
+                        card.style.animationDelay = `${Math.random() * 0.3}s`;
+                        card.classList.add('hover-active');
+                    });
+                    
+                    card.addEventListener('mouseleave', () => {
+                        card.classList.remove('hover-active');
+                    });
+                });
+            };
+
+            // Floating particles animation
+            const createFloatingParticles = () => {
+                const particlesContainer = document.createElement('div');
+                particlesContainer.className = 'floating-particles';
+                particlesContainer.innerHTML = `
+                    <div class="particle">🌱</div>
+                    <div class="particle">🌿</div>
+                    <div class="particle">🍃</div>
+                    <div class="particle">🌾</div>
+                    <div class="particle">💚</div>
+                `;
+                document.body.appendChild(particlesContainer);
+            };
+
+            // Progressive enhancement
+            if (window.IntersectionObserver) {
+                animateCounters();
+            }
+            
+            addSmoothScrolling();
+            
+            if (window.requestAnimationFrame) {
+                addParallaxEffect();
+            }
+            
+            enhanceCardAnimations();
+            createFloatingParticles();
+        }
+
+        // Add CSS for floating particles
+        const addParticleStyles = () => {
+            const style = document.createElement('style');
+            style.textContent = `
+                .floating-particles {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                    z-index: -1;
+                }
+                
+                .particle {
+                    position: absolute;
+                    font-size: 1.5em;
+                    opacity: 0.7;
+                    animation: float 15s infinite linear;
+                }
+                
+                .particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+                .particle:nth-child(2) { left: 20%; animation-delay: 3s; }
+                .particle:nth-child(3) { left: 80%; animation-delay: 6s; }
+                .particle:nth-child(4) { left: 90%; animation-delay: 9s; }
+                .particle:nth-child(5) { left: 60%; animation-delay: 12s; }
+                
+                @keyframes float {
+                    0% { 
+                        transform: translateY(100vh) rotate(0deg);
+                        opacity: 0;
+                    }
+                    10% { 
+                        opacity: 0.7;
+                    }
+                    90% { 
+                        opacity: 0.7;
+                    }
+                    100% { 
+                        transform: translateY(-100px) rotate(360deg);
+                        opacity: 0;
+                    }
+                }
+                
+                .hover-active {
+                    animation: pulse 0.6s ease-in-out;
+                }
+                
+                @keyframes pulse {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.02); }
+                    100% { transform: scale(1); }
+                }
+            `;
+            document.head.appendChild(style);
+        };
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Home page loaded');
+            
+            // Test API connection
+            testAPIConnection();
+            
+            // Check authentication
+            checkAuthentication();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Add interactive features
+            addParticleStyles();
+            setTimeout(addInteractiveFeatures, 500); // Small delay for better performance
+            
+            console.log('✅ Home page initialized with enhanced features');
+        });
+
+        // Check if user is already logged in
+        async function checkAuthentication() {
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                try {
+                    const response = await fetch(`${API_BASE}/auth/verify`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        currentUser = data.user;
+                        authToken = token;
+                        updateUIForLoggedInUser();
+                    } else {
+                        localStorage.removeItem('authToken');
+                    }
+                } catch (error) {
+                    console.error('Auth check failed:', error);
+                    localStorage.removeItem('authToken');
+                }
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Auth buttons
+            document.getElementById('loginBtn')?.addEventListener('click', () => openModal('login'));
+            document.getElementById('registerBtn')?.addEventListener('click', () => openModal('register'));
+            document.getElementById('guestBtn')?.addEventListener('click', playAsGuest);
+            
+            // Modal controls
+            document.getElementById('closeModal')?.addEventListener('click', closeModal);
+            
+            // Tab navigation
+            document.getElementById('loginTab')?.addEventListener('click', (event) => openTab(event, 'login'));
+            document.getElementById('registerTab')?.addEventListener('click', (event) => openTab(event, 'register'));
+            
+            // Login form
+            document.getElementById('loginForm')?.addEventListener('submit', handleLogin);
+            
+            // Register form
+            document.getElementById('registerForm')?.addEventListener('submit', handleRegister);
+
+            // Modal close on click outside
+            window.addEventListener('click', function(event) {
+                const authModal = document.getElementById('authModal');
+                if (event.target === authModal) {
+                    closeModal();
+                }
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    closeModal();
+                }
+            });
+        }
+
+        // Handle login
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const loginData = {
+                usernameOrEmail: formData.get('usernameOrEmail'),
+                password: formData.get('password')
+            };
+
+            const submitBtn = document.getElementById('loginSubmit');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '🔄 Logging in...';
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(loginData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    currentUser = data.user;
+                    authToken = data.token;
+                    localStorage.setItem('authToken', data.token);
+                    
+                    showMessage('✅ Login successful!', 'success');
+                    
+                    setTimeout(() => {
+                        closeModal();
+                        updateUIForLoggedInUser();
+                    }, 1000);
+                } else {
+                    showMessage(`❌ ${data.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage('❌ Network error. Please try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🔑 Login';
+            }
+        }
+
+        // Handle registration
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const password = formData.get('password');
+            const confirmPassword = formData.get('confirmPassword');
+
+            if (password !== confirmPassword) {
+                showMessage('❌ Passwords do not match!', 'error');
+                return;
+            }
+
+            const registerData = {
+                username: formData.get('username'),
+                email: formData.get('email'),
+                password: password,
+                displayName: formData.get('displayName') || formData.get('username')
+            };
+
+            const submitBtn = document.getElementById('registerSubmit');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '🔄 Registering...';
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(registerData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    currentUser = data.user;
+                    authToken = data.token;
+                    localStorage.setItem('authToken', data.token);
+                    
+                    showMessage('✅ Registration successful!', 'success');
+                    
+                    setTimeout(() => {
+                        closeModal();
+                        updateUIForLoggedInUser();
+                    }, 1000);
+                } else {
+                    showMessage(`❌ ${data.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showMessage('❌ Network error. Please try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '📝 Register';
+            }
+        }
+
+        // Update UI for logged in user
+        function updateUIForLoggedInUser() {
+            const userSection = document.getElementById('userSection');
+            const authButtons = document.getElementById('authButtons');
+
+            userSection.innerHTML = `
+                <div class="user-welcome">
+                    <h3>🌾 Welcome back, ${currentUser.display_name || currentUser.username}!</h3>
+                    <div class="user-info">Ready to continue your sustainable farming journey?</div>
+                    <div class="button-group">
+                        <button class="btn" id="startFarmingBtn">🚜 Continue Your Farm</button>
+                        <button class="btn btn-secondary" id="logoutBtn">🚪 Logout</button>
+                    </div>
+                </div>
+            `;
+
+            authButtons.style.display = 'none';
+            
+            // Add event listeners for the dynamically created buttons
+            document.getElementById('startFarmingBtn')?.addEventListener('click', startFarming);
+            document.getElementById('logoutBtn')?.addEventListener('click', logout);
+        }
+
+        // Play as guest
+        function playAsGuest() {
+            console.log('Playing as guest - redirecting to game...');
+            // Set guest mode in sessionStorage
+            sessionStorage.setItem('gameMode', 'guest');
+            sessionStorage.removeItem('userId');
+            sessionStorage.removeItem('username');
+            sessionStorage.removeItem('authToken');
+            
+            // Redirect to game page
+            window.location.href = '/game';
+        }
+
+        // Start farming (for logged in users)
+        function startFarming() {
+            console.log('Starting farming for logged in user...');
+            // Set user mode in sessionStorage
+            sessionStorage.setItem('gameMode', 'user');
+            sessionStorage.setItem('userId', currentUser.id);
+            sessionStorage.setItem('username', currentUser.username);
+            sessionStorage.setItem('authToken', authToken);
+            
+            // Redirect to game page
+            window.location.href = '/game';
+        }
+
+        // Logout
+        function logout() {
+            currentUser = null;
+            authToken = null;
+            localStorage.removeItem('authToken');
+            sessionStorage.clear();
+            
+            // Reset UI
+            document.getElementById('userSection').innerHTML = '';
+            document.getElementById('authButtons').style.display = 'flex';
+            
+            showMessage('✅ Logged out successfully!', 'success');
+        }
+
+        // Modal functions
+        function openModal(tab) {
+            const modal = document.getElementById('authModal');
+            modal.style.display = 'block';
+            
+            if (tab) {
+                // Reset all tabs first
+                document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                // Activate the requested tab
+                if (tab === 'login') {
+                    document.getElementById('loginTab').classList.add('active');
+                    document.getElementById('loginTabContent').classList.add('active');
+                    document.getElementById('modalTitle').textContent = 'Login to Your Farm';
+                } else if (tab === 'register') {
+                    document.getElementById('registerTab').classList.add('active');
+                    document.getElementById('registerTabContent').classList.add('active');
+                    document.getElementById('modalTitle').textContent = 'Create New Account';
+                }
+            }
+            
+            clearMessage();
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('authModal');
+            modal.style.display = 'none';
+            clearMessage();
+        }
+
+        function openTab(event, tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tab + 'TabContent').classList.add('active');
+
+            // Update modal title
+            const title = tab === 'login' ? 'Login to Your Farm' : 'Create New Account';
+            document.getElementById('modalTitle').textContent = title;
+
+            clearMessage();
+        }
+
+        // Message functions
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('authMessage');
+            messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        function clearMessage() {
+            document.getElementById('authMessage').innerHTML = '';
+        }
+
+        // Test API connection
+        async function testAPI() {
+            try {
+                const response = await fetch(`${API_BASE}/test`);
+                const data = await response.json();
+                console.log('API Test:', data);
+            } catch (error) {
+                console.error('API connection failed:', error);
+            }
+        }
+
+        // Test API connection on page load
+        async function testAPIConnection() {
+            try {
+                console.log('🔌 Testing API connection...');
+                const response = await fetch(`${API_BASE}/test`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ API connection successful:', data);
+                    return true;
+                } else {
+                    console.error('❌ API response error:', response.status);
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ API connection failed:', error);
+                
+                // Show user-friendly message
+                const authButtons = document.getElementById('authButtons');
+                if (authButtons) {
+                    authButtons.innerHTML = `
+                        <div style="background: #FFE4E1; border: 2px solid #FF6B6B; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                            <h3 style="color: #D63031; margin-bottom: 10px;">⚠️ Server Connection Issue</h3>
+                            <p style="color: #2D3436; font-size: 0.7em; line-height: 1.4;">
+                                The game server is not running. Please:<br>
+                                1. Make sure you ran: <code>npm start</code><br>
+                                2. Check that server is running on port 3000<br>
+                                3. Refresh this page after starting the server
+                            </p>
+                            <button class="btn btn-guest" onclick="playAsGuest()" style="margin-top: 10px;">
+                                🎮 Play Offline (Guest Mode)
+                            </button>
+                        </div>
+                    `;
+                }
+                return false;
+            }
+        }
+
+
+
+        // Enhanced playAsGuest function with better error handling
+        function playAsGuest() {
+            console.log('🎮 Starting guest mode...');
+            
+            try {
+                // Set guest mode in sessionStorage
+                sessionStorage.setItem('gameMode', 'guest');
+                sessionStorage.removeItem('userId');
+                sessionStorage.removeItem('username');
+                sessionStorage.removeItem('authToken');
+                
+                console.log('✅ Guest mode configured');
+                
+                // Redirect to game page
+                console.log('🔄 Redirecting to game...');
+                window.location.href = '/game';
+                
+            } catch (error) {
+                console.error('❌ Guest mode error:', error);
+                alert('Error starting guest mode. Please try refreshing the page.');
+            }
+        }
+
+        // Enhanced startFarming function
+        function startFarming() {
+            console.log('🚜 Starting farming for logged in user...');
+            
+            if (!currentUser) {
+                console.error('❌ No current user found');
+                alert('Please log in first');
+                return;
+            }
+            
+            try {
+                // Set user mode in sessionStorage
+                sessionStorage.setItem('gameMode', 'user');
+                sessionStorage.setItem('userId', currentUser.id);
+                sessionStorage.setItem('username', currentUser.username);
+                sessionStorage.setItem('authToken', authToken);
+                
+                console.log('✅ User mode configured for:', currentUser.username);
+                
+                // Redirect to game page
+                console.log('🔄 Redirecting to game...');
+                window.location.href = '/game';
+                
+            } catch (error) {
+                console.error('❌ Start farming error:', error);
+                alert('Error starting game. Please try logging in again.');
+            }
+        }
+    </script>
+</body>
+</html>

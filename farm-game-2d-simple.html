@@ -1,0 +1,2599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmED - Simple 2D Farming Game</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Press Start 2P', monospace;
+            background: #87ceeb;
+            overflow: hidden;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #gameCanvas {
+            display: block;
+            border: none;
+            background: #228B22;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: pixelated;
+        }
+
+        .ui-panel {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .top-panel {
+            top: 10px;
+            left: 10px;
+            min-width: 250px;
+        }
+
+        .action-panel {
+            bottom: 10px;
+            left: 10px;
+            min-width: 300px;
+        }
+
+        .action-btn {
+            background: #4CAF50;
+            color: black;
+            border: none;
+            padding: 8px 12px;
+            margin: 3px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 10px;
+        }
+
+        .action-btn:hover {
+            background: #45a049;
+        }
+
+        .action-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .buddy-panel {
+            top: 10px;
+            right: 10px;
+            width: 300px;
+            max-height: 400px;
+            background: rgba(40, 60, 40, 0.95);
+            border: 2px solid #4CAF50;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .buddy-character {
+            text-align: center;
+            padding: 15px;
+            border-bottom: 1px solid #4CAF50;
+        }
+
+        .buddy-avatar {
+            font-size: 48px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .buddy-name {
+            font-size: 14px;
+            color: #90EE90;
+            margin-bottom: 5px;
+        }
+
+        .buddy-title {
+            font-size: 8px;
+            color: #98FB98;
+            opacity: 0.8;
+        }
+
+        .buddy-message {
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            margin: 10px;
+            border-radius: 10px;
+            border-left: 3px solid #4CAF50;
+            font-size: 9px;
+            line-height: 1.4;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .buddy-controls {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .buddy-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 8px;
+        }
+
+        .buddy-btn:hover {
+            background: #45a049;
+        }
+
+        /* Message notification animations */
+        @keyframes slideInFromRight {
+            0% {
+                transform: translateY(-50%) translateX(100%);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(-50%) translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutToRight {
+            0% {
+                transform: translateY(-50%) translateX(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-50%) translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div class="ui-panel top-panel">
+            <div>🌾 ZONORG Farm</div>
+            <div>💰 Coins: <span id="coins">100</span></div>
+            <div>📊 Level: <span id="level">1</span></div>
+            <div>⭐ XP: <span id="xp">0</span></div>
+            <div>🌱 Plots: <span id="plotCount">3</span></div>
+            <div>🌍 Sustainability: <span id="sustainability">75%</span></div>
+            <div>🌤️ Weather: <span id="weather">☀️ Sunny</span></div>
+            <div>🗓️ Season: <span id="season">🌸 Spring</span></div>
+            <div>💩 Manure: <span id="manure">0</span> units</div>
+            <div>♻️ Waste: <span id="wasteCount">0</span> items</div>
+            <div id="currentMode" style="color: #FF9800; font-weight: bold; font-size: 0.9em;">🎯 Mode: Ready</div>
+            <div id="userInfo" style="color: #2196F3; font-size: 0.8em;">👤 Guest Mode</div>
+            <div id="saveStatus" style="color: #4CAF50; font-size: 0.8em;">💾 Ready</div>
+        </div>
+
+        <div class="ui-panel action-panel">
+            <div><strong>Mode Actions:</strong></div>
+            <button class="action-btn" id="createPlotBtn">🔨 Create Plot (50 coins)</button>
+            <button class="action-btn" id="removePlotBtn">❌ Remove Plot</button>
+            <button class="action-btn" id="upgradePlotBtn">⭐ Upgrade Plot</button>
+            <button class="action-btn" id="waterBtn">💧 Water Crops</button>
+            <button class="action-btn" id="harvestBtn">🧺 Harvest</button>
+            <br>
+            <div style="margin-top: 10px;"><strong>Seed Planting:</strong></div>
+            <button class="action-btn" id="wheatBtn">🌾 Wheat (<span id="wheatCount">5</span>)</button>
+            <button class="action-btn" id="carrotBtn">🥕 Carrot (<span id="carrotCount">2</span>)</button>
+            <button class="action-btn" id="pumpkinBtn">🎃 Pumpkin (<span id="pumpkinCount">1</span>)</button>
+            <button class="action-btn" id="tomatoBtn">🍅 Tomato (<span id="tomatoCount">3</span>)</button>
+            <button class="action-btn" id="cornBtn">🌽 Corn (<span id="cornCount">1</span>)</button>
+            <br>
+            <div style="margin-top: 10px;"><strong>Harvested Crops:</strong></div>
+            <div style="font-size: 10px; color: #90EE90;">🌾 Wheat: <span id="harvestedWheat">0</span> | 🥕 Carrot: <span id="harvestedCarrot">0</span> | 🎃 Pumpkin: <span id="harvestedPumpkin">0</span></div>
+            <div style="font-size: 10px; color: #90EE90;">🍅 Tomato: <span id="harvestedTomato">0</span> | 🌽 Corn: <span id="harvestedCorn">0</span></div>
+            <br>
+            <div style="margin-top: 10px;"><strong>Eco Tools:</strong></div>
+            <button class="action-btn" id="compostBtn">🍂 Compost (15 coins)</button>
+            <button class="action-btn" id="fertilizerBtn">🌿 Fertilizer (20 coins)</button>
+            <button class="action-btn" id="pestControlBtn">🐛 Pest Control (10 coins)</button>
+            <button class="action-btn" id="manureBtn">💩 Generate Manure</button>
+            <button class="action-btn" id="useManureBtn">🌱 Apply Manure</button>
+            <br>
+            <div style="margin-top: 10px;"><strong>Actions:</strong></div>
+            <button class="action-btn" id="buySeedsBtn">🛒 Buy Seeds</button>
+            <button class="action-btn" id="sellCropsBtn">💰 Sell Crops</button>
+            <button class="action-btn" id="saveBtn">💾 Save Game</button>
+            <button class="action-btn" id="loadBtn">📁 Load Game</button>
+            <button class="action-btn" id="statsBtn">📊 View Stats</button>
+            <button class="action-btn" id="logoutBtn" style="display:none;">🚪 Logout</button>
+        </div>
+
+        <!-- Buddy Character Panel -->
+        <div class="ui-panel buddy-panel" id="buddyPanel">
+            <div class="buddy-character">
+                <span class="buddy-avatar" id="buddyAvatar">👩‍🌾</span>
+                <div class="buddy-name">Farm Buddy</div>
+                <div class="buddy-title">Your Eco-Farming Guide</div>
+            </div>
+            <div class="buddy-message" id="buddyMessage">
+                Hey there, future eco-farmer! 🌱 I'm Buddy, your farming guide! Let's learn sustainable farming together!
+            </div>
+            <div class="buddy-controls">
+                <button class="buddy-btn" id="nextTipBtn">💡 Next Tip</button>
+                <button class="buddy-btn" id="buddyHelpBtn">❓ Need Help</button>
+                <button class="buddy-btn" id="encourageBtn">🌟 Encourage</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Resize canvas to full window
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Game state
+        // Game state
+        let gameState = {
+            coins: 100,
+            level: 1,
+            xp: 0,
+            inventory: {
+                wheat: 5,
+                carrot: 2,
+                pumpkin: 1,
+                tomato: 3,
+                corn: 1
+            },
+            harvested: {
+                wheat: 0,
+                carrot: 0,
+                pumpkin: 0,
+                tomato: 0,
+                corn: 0
+            },
+            mode: null, // null, 'create-plot', 'plant', 'water', 'harvest', etc.
+            selectedSeed: null,
+            selectedPlot: null,
+            achievements: [],
+            totalHarvested: 0,
+            totalPlanted: 0,
+            totalEarned: 0,
+            // Sustainability metrics
+            soilHealth: 100,
+            biodiversityScore: 50,
+            waterEfficiency: 80,
+            carbonReduction: 0,
+            sustainabilityRating: 'Beginner',
+            rainwaterCollected: 0,
+            compostUsed: 0,
+            organicCertified: false,
+            // Buddy system
+            buddyTipIndex: 0,
+            buddyVisible: true,
+            firstTime: true,
+            // Advanced sustainability features
+            currentSeason: 'spring',
+            currentWeather: 'sunny',
+            weatherTimer: 0,
+            seasonTimer: 0,
+            soilPH: 6.5,
+            pestPressure: 0,
+            beneficialInsects: 0,
+            renewableEnergy: 0,
+            energyConsumption: 10,
+            // Installation tracking
+            installations: {
+                solar: false,
+                wind: false,
+                biogas: false,
+                rainwater: false,
+                compost: false
+            },
+            carbonFootprint: 100,
+            carbonSequestered: 0,
+            foodWaste: 0,
+            preservedFood: 0,
+            coverCrops: 0,
+            trees: 0,
+            farmExpanded: false,
+            // Manure generation system
+            wasteItems: {
+                rottenCrops: 0,
+                cropResidues: 0,
+                spoiledSeeds: 0,
+                organicMatter: 0
+            },
+            manureProduced: 0,
+            manureQuality: 50, // 0-100 quality rating
+            compostingActive: false,
+            compostingStartTime: 0,
+            compostingDuration: 30000, // 30 seconds in milliseconds
+            manureEffects: {
+                soilHealthBonus: 0,
+                yieldBonus: 0,
+                sustainabilityBonus: 0
+            }
+        };
+
+        // Crop definitions with sustainability features
+        const CROPS = {
+            wheat: {
+                name: 'Wheat',
+                emoji: '🌾',
+                seedCost: 10,
+                sellPrice: 25,
+                growthTime: 8000, // 8 seconds
+                color: '#DAA520',
+                stages: ['🌱', '🌿', '🌾'],
+                soilHealth: 'neutral', // neutral, improves, depletes
+                waterNeed: 'medium',
+                sustainabilityBonus: 'Crop rotation with wheat improves soil nitrogen!',
+                carbonFootprint: 'low'
+            },
+            carrot: {
+                name: 'Carrot',
+                emoji: '🥕',
+                seedCost: 15,
+                sellPrice: 35,
+                growthTime: 12000,
+                color: '#FF6B35',
+                stages: ['🌱', '🥬', '🥕'],
+                soilHealth: 'improves',
+                waterNeed: 'low',
+                sustainabilityBonus: 'Root crops like carrots break soil compaction naturally!',
+                carbonFootprint: 'very low'
+            },
+            pumpkin: {
+                name: 'Pumpkin',
+                emoji: '🎃',
+                seedCost: 25,
+                sellPrice: 60,
+                growthTime: 20000,
+                color: '#FF8C00',
+                stages: ['🌱', '🌿', '🎃'],
+                soilHealth: 'improves',
+                waterNeed: 'high',
+                sustainabilityBonus: 'Pumpkin vines provide excellent ground cover, reducing erosion!',
+                carbonFootprint: 'medium'
+            },
+            tomato: {
+                name: 'Tomato',
+                emoji: '🍅',
+                seedCost: 12,
+                sellPrice: 30,
+                growthTime: 10000,
+                color: '#FF6347',
+                stages: ['🌱', '🌿', '🍅'],
+                soilHealth: 'depletes',
+                waterNeed: 'high',
+                sustainabilityBonus: 'Companion planting with tomatoes attracts beneficial insects!',
+                carbonFootprint: 'medium'
+            },
+            corn: {
+                name: 'Corn',
+                emoji: '🌽',
+                seedCost: 20,
+                sellPrice: 45,
+                growthTime: 15000,
+                color: '#FFD700',
+                stages: ['🌱', '🌿', '🌽'],
+                soilHealth: 'depletes',
+                waterNeed: 'high',
+                sustainabilityBonus: 'Traditional Three Sisters planting with corn supports biodiversity!',
+                carbonFootprint: 'medium'
+            }
+        };
+
+        // Sustainability metrics system
+        let sustainabilityMetrics = {
+            sustainabilityScore: 75,
+            sustainabilityRating: 'Learning Farmer',
+            soilHealthScore: 85,
+            biodiversityLevel: 'Moderate',
+            carbonFootprintReduction: 15,
+            waterConservationLevel: 'Good',
+            renewableEnergyUsage: 0,
+            organicPractices: 2,
+            lastUpdated: Date.now()
+        };
+
+        // Weather and environmental systems
+        let weather = {
+            current: 'sunny', // sunny, rainy, cloudy, stormy
+            temperature: 22,
+            humidity: 60,
+            windSpeed: 5,
+            lastChange: Date.now(),
+            duration: 120000, // 2 minutes per weather cycle
+            rainIntensity: 0,
+            forecast: ['sunny', 'cloudy', 'rainy']
+        };
+
+        let season = {
+            current: 'spring', // spring, summer, autumn, winter
+            day: 1,
+            totalDays: 0,
+            dayLength: 60000, // 1 minute per season day
+            lastChange: Date.now(),
+            seasonEffects: {
+                spring: { growthBonus: 1.1, waterNeed: 0.9 },
+                summer: { growthBonus: 1.2, waterNeed: 1.3 },
+                autumn: { growthBonus: 0.9, waterNeed: 0.8 },
+                winter: { growthBonus: 0.7, waterNeed: 0.6 }
+            }
+        };
+
+        // Buddy system for educational content
+        const buddyTips = [
+            {
+                message: "Hey there, future eco-farmer! 🌱 I'm Buddy, your farming guide! Let's learn sustainable farming together! Click on a plot to get started!",
+                mood: "excited",
+                trigger: "welcome"
+            },
+            {
+                message: "Great choice selecting that plot! 🎯 Now try planting some crops. I recommend starting with wheat - it's easy to grow and good for beginners!",
+                mood: "happy",
+                trigger: "plot_selected"
+            },
+            {
+                message: "Awesome! 🌾 Did you know that crop rotation helps keep soil healthy? Try planting different crops in the same plot over time!",
+                mood: "happy",
+                trigger: "first_plant"
+            },
+            {
+                message: "Look at those crops growing! 🌿 While we wait, let me tell you about water conservation. Using rainwater is much better than groundwater!",
+                mood: "thinking",
+                trigger: "crop_growing"
+            },
+            {
+                message: "Time to harvest! 🧺 After harvesting, you can compost the leftover plant parts. It's nature's way of recycling nutrients back to soil!",
+                mood: "excited",
+                trigger: "ready_harvest"
+            }
+        ];
+
+        // Buddy character system functions
+        function showNextTip() {
+            gameState.buddyTipIndex = (gameState.buddyTipIndex + 1) % buddyTips.length;
+            updateBuddyDisplay();
+        }
+
+        function showBuddyEncouragement() {
+            const encouragements = [
+                "🌟 You're doing amazing! Keep up the great farming work!",
+                "🎉 Your sustainable farming skills are growing beautifully!",
+                "💚 I'm so proud of how you care for the environment!",
+                "🌱 Every seed you plant makes the world a greener place!",
+                "✨ Your farm is becoming a wonderful eco-paradise!",
+                "🌈 You're learning so fast! Nature loves you!",
+                "🏆 You're becoming a true eco-farming champion!",
+                "💫 Your dedication to sustainable farming is inspiring!"
+            ];
+            
+            const randomEncouragement = encouragements[Math.floor(Math.random() * encouragements.length)];
+            showBuddyReaction(randomEncouragement, "🌟", 3000);
+        }
+
+        function askBuddyHelp() {
+            const helpTips = [
+                "🔨 Click 'Create Plot' then click on green grass to build new plots!",
+                "🌱 Select seeds from the buttons, then click on empty plots to plant!",
+                "💧 Water your crops regularly for better harvests!",
+                "🧺 Harvest crops when they're fully grown for coins and XP!",
+                "⭐ Upgrade plots to increase productivity and soil health!",
+                "🍂 Use compost to improve soil naturally!",
+                "🌿 Fertilizer speeds up crop growth!",
+                "🐛 Pest control protects your valuable crops!",
+                "🌍 Practice sustainable farming to increase your eco-score!",
+                "💾 Don't forget to save your progress!"
+            ];
+            
+            const randomTip = helpTips[Math.floor(Math.random() * helpTips.length)];
+            const buddyMessage = document.getElementById('buddyMessage');
+            buddyMessage.textContent = randomTip;
+        }
+
+        function updateBuddyDisplay() {
+            const buddyMessage = document.getElementById('buddyMessage');
+            const buddyAvatar = document.getElementById('buddyAvatar');
+            
+            const currentTip = buddyTips[gameState.buddyTipIndex];
+            if (currentTip) {
+                buddyMessage.textContent = currentTip.message;
+                
+                // Change avatar based on mood
+                switch (currentTip.mood) {
+                    case 'excited':
+                        buddyAvatar.textContent = '🤠'; // Excited farmer
+                        break;
+                    case 'happy':
+                        buddyAvatar.textContent = '👩‍🌾'; // Happy young farmer
+                        break;
+                    case 'thinking':
+                        buddyAvatar.textContent = '🧑‍🌾'; // Thoughtful farmer
+                        break;
+                    default:
+                        buddyAvatar.textContent = '👩‍🌾'; // Default young farmer
+                }
+            }
+        }
+
+        function showBuddyReaction(message, avatar = '👩‍🌾', duration = 2000) {
+            const buddyMessage = document.getElementById('buddyMessage');
+            const buddyAvatar = document.getElementById('buddyAvatar');
+            const buddyPanel = document.getElementById('buddyPanel');
+            
+            // Always make buddy visible and show immediate reaction
+            buddyPanel.style.display = 'block';
+            buddyMessage.textContent = message;
+            buddyAvatar.textContent = avatar;
+            
+            // Add attention-grabbing animation
+            buddyPanel.style.transform = 'scale(1.05)';
+            buddyPanel.style.boxShadow = '0 6px 20px rgba(76, 175, 80, 0.4)';
+            
+            setTimeout(() => {
+                buddyPanel.style.transform = 'scale(1)';
+                buddyPanel.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
+            }, 300);
+        }
+
+        function showBuddyTip(trigger) {
+            // Find tip by trigger
+            const tip = buddyTips.find(t => t.trigger === trigger);
+            if (tip) {
+                const buddyMessage = document.getElementById('buddyMessage');
+                buddyMessage.textContent = tip.message;
+                
+                // Update avatar based on mood
+                updateBuddyDisplay();
+                
+                // Auto-advance tip index if it matches
+                const tipIndex = buddyTips.findIndex(t => t.trigger === trigger);
+                if (tipIndex !== -1) {
+                    gameState.buddyTipIndex = tipIndex;
+                }
+            }
+        }
+
+        // API and Authentication
+        const API_BASE = window.location.origin + '/api';
+        let gameMode = 'guest'; // 'guest' or 'user'
+        let userId = null;
+        let username = null;
+        let authToken = null;
+
+        // Farm plots - 2D grid system
+        // Advanced plot system with 5 upgrade levels - Starting with 3 static plots
+        let plots = [
+            {
+                x: -1,
+                y: 0,
+                crop: null,
+                cropType: null,
+                growth: 0,
+                watered: false,
+                composted: false,
+                plantedAt: null,
+                fullyGrown: false,
+                state: 'empty',
+                selected: false,
+                soilQuality: 'good',
+                soilHealth: 75,
+                upgradeLevel: 1,
+                fertility: 100,
+                pestResistance: 50,
+                waterEfficiency: 1.0,
+                notified: false,
+                plotSize: 1.5,
+                lastHarvested: null,
+                cropHistory: [],
+                sustainabilityBonus: 1.0
+            },
+            {
+                x: 0,
+                y: 0,
+                crop: null,
+                cropType: null,
+                growth: 0,
+                watered: false,
+                composted: false,
+                plantedAt: null,
+                fullyGrown: false,
+                state: 'empty',
+                selected: false,
+                soilQuality: 'good',
+                soilHealth: 75,
+                upgradeLevel: 1,
+                fertility: 100,
+                pestResistance: 50,
+                waterEfficiency: 1.0,
+                notified: false,
+                plotSize: 1.5,
+                lastHarvested: null,
+                cropHistory: [],
+                sustainabilityBonus: 1.0
+            },
+            {
+                x: 1,
+                y: 0,
+                crop: null,
+                cropType: null,
+                growth: 0,
+                watered: false,
+                composted: false,
+                plantedAt: null,
+                fullyGrown: false,
+                state: 'empty',
+                selected: false,
+                soilQuality: 'good',
+                soilHealth: 75,
+                upgradeLevel: 1,
+                fertility: 100,
+                pestResistance: 50,
+                waterEfficiency: 1.0,
+                notified: false,
+                plotSize: 1.5,
+                lastHarvested: null,
+                cropHistory: [],
+                sustainabilityBonus: 1.0
+            }
+        ];
+
+        // Global UI functions for advanced interface
+        function setGameMode(mode) {
+            console.log(`🔧 Setting game mode to: ${mode}`);
+            gameState.mode = mode;
+            gameState.selectedSeed = null;
+            updateCursor();
+            updateModeDisplay();
+            console.log(`✅ Mode set successfully - gameState.mode is now: ${gameState.mode} - Current coins: ${gameState.coins}`);
+            
+            // Buddy reacts to mode changes
+            const modeReactions = {
+                'create-plot': `🔨 Let's build some plots! I'll find the perfect spot for you!`,
+                'water': `💧 Time to water! Click on crops that need hydration. Happy plants grow better!`,
+                'harvest': `🧺 Harvest time! Look for fully grown crops and collect your rewards!`,
+                'compost': `🍂 Composting mode! Add natural nutrients to your soil for sustainable farming!`,
+                'fertilizer': `🌿 Fertilizer mode! Give your crops a growth boost when they need it!`,
+                'pest-control': `🐛 Pest control mode! Protect your precious crops from harmful insects!`,
+                'remove-plot': `🔧 Removal mode! Clear old plots to make space for better farm layout!`,
+                'upgrade-plot': `⭐ Upgrade mode! Make your plots more efficient and productive!`
+            };
+            
+            if (modeReactions[mode]) {
+                showBuddyReaction(modeReactions[mode], '👩‍🌾');
+            }
+        }
+        
+        function setPlantMode(seedType) {
+            if (gameState.inventory[seedType] > 0) {
+                gameState.mode = 'Plant';
+                gameState.selectedSeed = seedType;
+                updateCursor();
+                console.log(`Selected ${CROPS[seedType].name} seeds`);
+                
+                // Buddy reacts to seed selection
+                const crop = CROPS[seedType];
+                showBuddyReaction(`🌱 Great choice! ${crop.name} is ${crop.description} Perfect for sustainable farming!`, '👩‍🌾');
+            } else {
+                showMessage(`No ${CROPS[seedType].name} seeds available!`);
+                showBuddyReaction(`😅 Oops! You need more ${CROPS[seedType].name} seeds. Try harvesting or buying more!`, '🤔');
+            }
+        }
+
+        // Enhanced save system with cloud integration
+        function saveGame() {
+            const gameData = {
+                plots: plots,
+                gameState: gameState,
+                sustainabilityMetrics: sustainabilityMetrics,
+                weather: weather,
+                season: season,
+                savedAt: Date.now(),
+                version: '2.0'
+            };
+            
+            // Save locally
+            localStorage.setItem('zonorgGameSave', JSON.stringify(gameData));
+            
+            // Try cloud save if user is authenticated
+            if (gameMode === 'user' && userId) {
+                saveToCloud(gameData);
+            } else {
+                updateSaveStatus('💾 Saved locally!');
+                showMessage('💾 Game saved locally! (Login to save to cloud)');
+                setTimeout(() => updateSaveStatus('💾 Ready'), 2000);
+            }
+        }
+
+        // Load game with cloud integration
+        function loadGame() {
+            try {
+                // Try cloud load first if authenticated
+                if (gameMode === 'user' && userId) {
+                    loadFromCloud();
+                    return;
+                }
+                
+                // Load from localStorage
+                const savedData = localStorage.getItem('zonorgGameSave');
+                if (savedData) {
+                    const gameData = JSON.parse(savedData);
+                    
+                    // Restore game state
+                    plots = gameData.plots || plots;
+                    Object.assign(gameState, gameData.gameState || {});
+                    Object.assign(sustainabilityMetrics, gameData.sustainabilityMetrics || {});
+                    Object.assign(weather, gameData.weather || {});
+                    Object.assign(season, gameData.season || {});
+                    
+                    updateUI();
+                    drawGame();
+                    showMessage('📁 Game loaded successfully!');
+                } else {
+                    showMessage('❌ No saved game found!');
+                }
+            } catch (error) {
+                console.error('Load game error:', error);
+                showMessage('❌ Error loading game!');
+            }
+        }
+
+        // Cloud save functionality
+        // Update save status indicator
+        function updateSaveStatus(status, isError = false) {
+            const statusElement = document.getElementById('saveStatus');
+            if (statusElement) {
+                statusElement.textContent = status;
+                statusElement.style.color = isError ? '#f44336' : '#4CAF50';
+            }
+        }
+
+        async function saveToCloud(gameData) {
+            updateSaveStatus('☁️ Saving...');
+            try {
+                const response = await fetch(`${API_BASE}/game/save`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        gameData: gameData
+                    })
+                });
+                
+                if (response.ok) {
+                    updateSaveStatus('☁️ Saved to cloud!');
+                    showMessage('☁️ Game saved to cloud!');
+                    setTimeout(() => updateSaveStatus('💾 Ready'), 2000);
+                } else {
+                    updateSaveStatus('💾 Local save only', true);
+                    showMessage('💾 Game saved locally only (cloud error)');
+                    setTimeout(() => updateSaveStatus('💾 Ready'), 3000);
+                }
+            } catch (error) {
+                console.error('Cloud save error:', error);
+                updateSaveStatus('💾 Local save only', true);
+                showMessage('💾 Game saved locally only (no connection)');
+                setTimeout(() => updateSaveStatus('💾 Ready'), 3000);
+            }
+        }
+
+        // Cloud load functionality  
+        async function loadFromCloud() {
+            updateSaveStatus('☁️ Loading...');
+            try {
+                const response = await fetch(`${API_BASE}/game/load?userId=${userId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.gameData) {
+                        // Restore from cloud
+                        plots = data.gameData.plots || plots;
+                        Object.assign(gameState, data.gameData.gameState || {});
+                        Object.assign(sustainabilityMetrics, data.gameData.sustainabilityMetrics || {});
+                        Object.assign(weather, data.gameData.weather || {});
+                        Object.assign(season, data.gameData.season || {});
+                        
+                        updateUI();
+                        drawGame();
+                        updateSaveStatus('☁️ Loaded from cloud!');
+                        showMessage('☁️ Game loaded from cloud!');
+                        setTimeout(() => updateSaveStatus('💾 Ready'), 2000);
+                    } else {
+                        // Fall back to local save
+                        updateSaveStatus('📁 Loading local...'); 
+                        loadGame();
+                    }
+                } else {
+                    // Fall back to local save
+                    loadGame();
+                }
+            } catch (error) {
+                console.error('Cloud load error:', error);
+                // Fall back to local save
+                loadGame();
+            }
+        }
+
+        // Update mode display
+        function updateModeDisplay() {
+            const modeElement = document.getElementById('currentMode');
+            if (modeElement) {
+                const modeNames = {
+                    null: '🎯 Ready',
+                    'create-plot': '🔨 Creating Plots',
+                    'remove-plot': '❌ Removing Plots', 
+                    'upgrade-plot': '⭐ Upgrading Plots',
+                    'Plant': '🌱 Planting Seeds',
+                    'water': '💧 Watering Crops',
+                    'harvest': '🧺 Harvesting',
+                    'compost': '🍂 Adding Compost',
+                    'fertilizer': '🌿 Applying Fertilizer',
+                    'pest-control': '🐛 Pest Control'
+                };
+                
+                const displayName = modeNames[gameState.mode] || `🎯 ${gameState.mode || 'Ready'}`;
+                modeElement.textContent = displayName;
+                modeElement.style.color = gameState.mode ? '#FF5722' : '#4CAF50';
+            }
+        }
+
+        // Update user info display
+        function updateUserInfo() {
+            const userInfoElement = document.getElementById('userInfo');
+            const logoutBtn = document.getElementById('logoutBtn');
+            
+            if (userInfoElement) {
+                if (gameMode === 'user' && username) {
+                    userInfoElement.textContent = `👤 ${username}`;
+                    userInfoElement.style.color = '#2196F3';
+                    if (logoutBtn) logoutBtn.style.display = 'inline-block';
+                } else {
+                    userInfoElement.textContent = '👤 Guest Mode';
+                    userInfoElement.style.color = '#666';
+                    if (logoutBtn) logoutBtn.style.display = 'none';
+                }
+            }
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout? Make sure your game is saved!')) {
+                // Clear session storage
+                sessionStorage.clear();
+                
+                // Reset auth variables
+                gameMode = 'guest';
+                userId = null;
+                username = null;
+                authToken = null;
+                
+                // Update display
+                updateUserInfo();
+                
+                // Show logout message
+                showMessage('👋 Logged out! Redirecting to home page...');
+                
+                // Redirect to home page
+                setTimeout(() => {
+                    window.location.href = 'home.html';
+                }, 1500);
+            }
+        }
+
+        // Initialize authentication state
+        function initializeAuth() {
+            gameMode = sessionStorage.getItem('gameMode') || 'guest';
+            userId = sessionStorage.getItem('userId');
+            username = sessionStorage.getItem('username');
+            authToken = sessionStorage.getItem('authToken');
+            
+            // Update user info display
+            updateUserInfo();
+            
+            console.log('🎮 Game Mode:', gameMode);
+            if (gameMode === 'user' && username) {
+                console.log('👤 User:', username);
+                showWelcomeMessage(`🌾 Welcome back, ${username}! 🌾\n\nYour advanced farm awaits!\nLoading your farm data...`);
+                // Load user's saved game data
+                loadGame();
+            } else {
+                console.log('👨‍🌾 Playing as guest');
+                showWelcomeMessage('🌾 Welcome to ZONORG Advanced Farm! 🌾\n\nPlaying as guest mode.\nYour progress will be saved locally.');
+                // Load local save if available for guests
+                loadGame();
+            }
+        }
+
+        // Buy seeds function
+        function buySeeds() {
+            const seedPrices = {
+                wheat: 5,
+                carrot: 8,
+                pumpkin: 15,
+                tomato: 12,
+                corn: 20
+            };
+
+            const seedShop = `
+🛒 ZONORG SEED SHOP 🛒
+
+Current Coins: ${gameState.coins}
+
+Available Seeds:
+🌾 Wheat: ${seedPrices.wheat} coins each (You have: ${gameState.inventory.wheat})
+🥕 Carrot: ${seedPrices.carrot} coins each (You have: ${gameState.inventory.carrot})
+🎃 Pumpkin: ${seedPrices.pumpkin} coins each (You have: ${gameState.inventory.pumpkin})
+🍅 Tomato: ${seedPrices.tomato} coins each (You have: ${gameState.inventory.tomato})
+🌽 Corn: ${seedPrices.corn} coins each (You have: ${gameState.inventory.corn})
+
+Enter seed type and quantity:
+Examples: "wheat 5", "carrot 3", "pumpkin 1"
+            `;
+
+            const input = prompt(seedShop);
+            if (!input) return;
+
+            const parts = input.toLowerCase().trim().split(' ');
+            if (parts.length !== 2) {
+                showMessage('❌ Invalid format! Use: seedtype quantity (e.g., "wheat 5")');
+                return;
+            }
+
+            const seedType = parts[0];
+            const quantity = parseInt(parts[1]);
+
+            if (!seedPrices[seedType]) {
+                showMessage('❌ Invalid seed type! Use: wheat, carrot, pumpkin, tomato, or corn');
+                return;
+            }
+
+            if (isNaN(quantity) || quantity <= 0) {
+                showMessage('❌ Invalid quantity! Enter a positive number');
+                return;
+            }
+
+            const totalCost = seedPrices[seedType] * quantity;
+            
+            if (gameState.coins < totalCost) {
+                showMessage(`❌ Not enough coins! Need ${totalCost} coins, you have ${gameState.coins}`);
+                return;
+            }
+
+            // Complete the purchase
+            gameState.coins -= totalCost;
+            gameState.inventory[seedType] += quantity;
+            
+            updateUI();
+            showMessage(`✅ Bought ${quantity} ${CROPS[seedType].name} seeds for ${totalCost} coins!`);
+            
+            // Buddy reacts to seed purchase
+            showBuddyReaction(`🛒 Great purchase! ${quantity} ${CROPS[seedType].name} seeds will help your farm grow! 🌱`, '💰');
+        }
+
+        // Manure Generation System
+        function generateManure() {
+            // Check if we have any waste items
+            const totalWaste = gameState.wasteItems.rottenCrops + 
+                              gameState.wasteItems.cropResidues + 
+                              gameState.wasteItems.spoiledSeeds + 
+                              gameState.wasteItems.organicMatter;
+
+            if (totalWaste === 0) {
+                showMessage('❌ No waste items available! Harvest crops or let some spoil to generate organic waste.');
+                showBuddyReaction('💡 Tip: Waste materials can be turned into valuable manure! Try leaving some crops unharvested longer.', '♻️');
+                return;
+            }
+
+            if (gameState.compostingActive) {
+                showMessage('⏳ Manure generation already in progress! Please wait...');
+                return;
+            }
+
+            const wasteDisplay = `
+♻️ MANURE GENERATOR ♻️
+
+Available Organic Waste:
+🥀 Rotten Crops: ${gameState.wasteItems.rottenCrops}
+🌾 Crop Residues: ${gameState.wasteItems.cropResidues}  
+🌱 Spoiled Seeds: ${gameState.wasteItems.spoiledSeeds}
+🍃 Organic Matter: ${gameState.wasteItems.organicMatter}
+
+Total Waste: ${totalWaste} units
+
+This will produce approximately ${Math.floor(totalWaste * 1.5)} units of manure!
+Manure improves soil health and crop yields.
+
+Generate manure now? (Type 'yes' to confirm)
+            `;
+
+            const confirmation = prompt(wasteDisplay);
+            if (confirmation && confirmation.toLowerCase() === 'yes') {
+                startManureGeneration(totalWaste);
+            }
+        }
+
+        function startManureGeneration(wasteAmount) {
+            gameState.compostingActive = true;
+            gameState.compostingStartTime = Date.now();
+            
+            // Calculate manure production
+            const baseProduction = wasteAmount * 1.5;
+            const qualityMultiplier = 1 + (gameState.soilHealth / 200); // Better soil = better composting
+            const expectedManure = Math.floor(baseProduction * qualityMultiplier);
+            
+            // Clear waste items
+            gameState.wasteItems.rottenCrops = 0;
+            gameState.wasteItems.cropResidues = 0;
+            gameState.wasteItems.spoiledSeeds = 0;
+            gameState.wasteItems.organicMatter = 0;
+            
+            showMessage('🔄 Starting manure generation... This will take 30 seconds.');
+            showBuddyReaction(`♻️ Excellent! Converting ${wasteAmount} waste units into valuable manure! Nature's recycling at work!`, '💩');
+            
+            // Start the composting process
+            setTimeout(() => {
+                completeManureGeneration(expectedManure);
+            }, gameState.compostingDuration);
+            
+            updateUI();
+        }
+
+        function completeManureGeneration(amount) {
+            gameState.compostingActive = false;
+            gameState.manureProduced += amount;
+            
+            // Improve manure quality based on diversity of waste
+            const qualityImprovement = Math.min(10, amount * 0.5);
+            gameState.manureQuality = Math.min(100, gameState.manureQuality + qualityImprovement);
+            
+            // Apply immediate benefits
+            const soilBonus = Math.floor(amount * 0.3);
+            const yieldBonus = Math.floor(amount * 0.2);
+            const sustainabilityBonus = Math.floor(amount * 0.1);
+            
+            gameState.manureEffects.soilHealthBonus += soilBonus;
+            gameState.manureEffects.yieldBonus += yieldBonus;
+            gameState.manureEffects.sustainabilityBonus += sustainabilityBonus;
+            
+            // Apply effects to current metrics
+            gameState.soilHealth = Math.min(100, gameState.soilHealth + soilBonus);
+            gameState.carbonSequestered += amount * 2; // Manure sequesters carbon
+            gameState.biodiversityScore = Math.min(100, gameState.biodiversityScore + sustainabilityBonus);
+            
+            const completionMessage = `
+✅ MANURE GENERATION COMPLETE! ✅
+
+🎉 Produced: ${amount} units of quality manure!
+💩 Manure Quality: ${gameState.manureQuality}%
+🌍 Total Manure: ${gameState.manureProduced} units
+
+Benefits Applied:
+🌱 Soil Health: +${soilBonus}
+📈 Yield Potential: +${yieldBonus}%
+♻️ Sustainability: +${sustainabilityBonus}
+🌿 Carbon Sequestered: +${amount * 2}
+
+Your manure will automatically improve future crop yields!
+            `;
+            
+            showMessage(completionMessage);
+            showBuddyReaction(`🎉 Fantastic! Your ${amount} units of high-quality manure will make your crops thrive! Sustainable farming at its finest!`, '🌟');
+            
+            updateUI();
+        }
+
+        // Function to generate waste items from various sources
+        function addWasteItems(type, amount) {
+            if (!gameState.wasteItems[type]) {
+                gameState.wasteItems[type] = 0;
+            }
+            gameState.wasteItems[type] += amount;
+            
+            // Notify player about waste generation
+            const wasteMessages = {
+                rottenCrops: `🥀 ${amount} rotten crops added to waste pile`,
+                cropResidues: `🌾 ${amount} crop residues collected`,
+                spoiledSeeds: `🌱 ${amount} spoiled seeds available for composting`,
+                organicMatter: `🍃 ${amount} organic matter collected`
+            };
+            
+            if (wasteMessages[type]) {
+                showMessage(wasteMessages[type]);
+            }
+        }
+
+        // Auto-generate some waste items from farming activities
+        function generateWasteFromHarvest(cropType, amount) {
+            // Generate crop residues from harvest
+            const residueAmount = Math.floor(amount * 0.3); // 30% of harvest becomes residue
+            addWasteItems('cropResidues', residueAmount);
+            addWasteItems('organicMatter', Math.floor(amount * 0.1)); // 10% becomes general organic matter
+        }
+
+        // Function to occasionally spoil unharvested crops (adds realism)
+        function checkCropSpoilage() {
+            plots.forEach(plot => {
+                if (plot.crop && plot.crop.stage === 'ready') {
+                    // 5% chance per check for ready crops to start spoiling if left too long
+                    if (Math.random() < 0.05) {
+                        // Crop spoils - convert to waste
+                        addWasteItems('rottenCrops', 1);
+                        showMessage(`🥀 A ${plot.crop.type} crop spoiled and was added to your waste pile!`);
+                        plot.crop = null; // Remove the spoiled crop
+                        updateUI();
+                    }
+                }
+            });
+        }
+
+        function showStats() {
+            const totalWaste = gameState.wasteItems.rottenCrops + 
+                              gameState.wasteItems.cropResidues + 
+                              gameState.wasteItems.spoiledSeeds + 
+                              gameState.wasteItems.organicMatter;
+            
+            const stats = `
+🌾 ZONORG Farm Stats 🌾
+💰 Coins: ${gameState.coins}
+📊 Level: ${gameState.level} (XP: ${gameState.xp})
+🌱 Total Plots: ${plots.length}
+🌍 Sustainability: ${sustainabilityMetrics.sustainabilityScore}%
+🌤️ Weather: ${weather.current}
+🗓️ Season: ${season.current}
+📈 Total Harvested: ${gameState.totalHarvested}
+🌾 Total Planted: ${gameState.totalPlanted}
+
+♻️ MANURE SYSTEM ♻️
+💩 Manure Produced: ${gameState.manureProduced} units
+🏆 Manure Quality: ${gameState.manureQuality}%
+🗑️ Total Waste: ${totalWaste} items
+🔄 Composting Active: ${gameState.compostingActive ? 'Yes' : 'No'}
+
+Waste Breakdown:
+🥀 Rotten Crops: ${gameState.wasteItems.rottenCrops}
+🌾 Crop Residues: ${gameState.wasteItems.cropResidues}
+🌱 Spoiled Seeds: ${gameState.wasteItems.spoiledSeeds}
+🍃 Organic Matter: ${gameState.wasteItems.organicMatter}
+
+Manure Benefits Applied:
+🌱 Soil Health Bonus: +${gameState.manureEffects.soilHealthBonus}
+📈 Yield Bonus: +${gameState.manureEffects.yieldBonus}%
+♻️ Sustainability Bonus: +${gameState.manureEffects.sustainabilityBonus}
+            `;
+            alert(stats);
+        }
+
+        // Crop Selling System
+        function sellCrops() {
+            // Check if we have any harvested crops
+            const totalCrops = gameState.harvested.wheat + 
+                              gameState.harvested.carrot + 
+                              gameState.harvested.pumpkin + 
+                              gameState.harvested.tomato + 
+                              gameState.harvested.corn;
+
+            if (totalCrops === 0) {
+                showMessage('❌ No harvested crops available to sell! Harvest some crops first.');
+                showBuddyReaction('💡 Tip: Harvest your ready crops to build up inventory for selling!', '💰');
+                return;
+            }
+
+            // Market prices based on crop type and season
+            const marketPrices = {
+                wheat: Math.floor(CROPS.wheat.sellPrice * (1 + Math.random() * 0.4 - 0.2)), // ±20% variation
+                carrot: Math.floor(CROPS.carrot.sellPrice * (1 + Math.random() * 0.4 - 0.2)),
+                pumpkin: Math.floor(CROPS.pumpkin.sellPrice * (1 + Math.random() * 0.4 - 0.2)),
+                tomato: Math.floor(CROPS.tomato.sellPrice * (1 + Math.random() * 0.4 - 0.2)),
+                corn: Math.floor(CROPS.corn.sellPrice * (1 + Math.random() * 0.4 - 0.2))
+            };
+
+            // Season bonuses
+            const seasonBonuses = {
+                'spring': { wheat: 1.1, carrot: 1.2, pumpkin: 0.9, tomato: 1.0, corn: 1.0 },
+                'summer': { wheat: 1.0, carrot: 1.0, pumpkin: 0.8, tomato: 1.3, corn: 1.2 },
+                'autumn': { wheat: 1.2, carrot: 1.0, pumpkin: 1.4, tomato: 0.9, corn: 1.1 },
+                'winter': { wheat: 1.3, carrot: 1.1, pumpkin: 1.0, tomato: 0.7, corn: 0.8 }
+            };
+
+            // Apply seasonal bonuses
+            Object.keys(marketPrices).forEach(crop => {
+                marketPrices[crop] = Math.floor(marketPrices[crop] * seasonBonuses[season.current][crop]);
+            });
+
+            let cropDisplay = `💰 CROP MARKETPLACE 💰\n\nCurrent Market Prices (Season: ${season.current}):\n`;
+            let totalValue = 0;
+            let salesDetails = '';
+
+            Object.keys(gameState.harvested).forEach(cropType => {
+                const quantity = gameState.harvested[cropType];
+                if (quantity > 0) {
+                    const price = marketPrices[cropType];
+                    const value = quantity * price;
+                    totalValue += value;
+                    cropDisplay += `\n${CROPS[cropType].emoji} ${CROPS[cropType].name}: ${quantity} × ${price} coins = ${value} coins`;
+                    salesDetails += `${cropType}:${quantity},`;
+                }
+            });
+
+            cropDisplay += `\n\nTotal Sale Value: ${totalValue} coins\n\nSell all harvested crops? (Type 'yes' to confirm)`;
+
+            const confirmation = prompt(cropDisplay);
+            if (confirmation && confirmation.toLowerCase() === 'yes') {
+                // Complete the sale
+                gameState.coins += totalValue;
+                
+                // Clear harvested crops
+                Object.keys(gameState.harvested).forEach(cropType => {
+                    gameState.harvested[cropType] = 0;
+                });
+
+                // Update statistics
+                gameState.totalEarned += totalValue;
+                gameState.xp += Math.floor(totalValue * 0.1); // 10% of earnings as XP
+                
+                const successMessage = `
+✅ CROPS SOLD SUCCESSFULLY! ✅
+
+💰 Earned: ${totalValue} coins
+💰 Total Coins: ${gameState.coins}
+🌟 XP Gained: +${Math.floor(totalValue * 0.1)}
+📈 Total Career Earnings: ${gameState.totalEarned}
+
+Thank you for selling your crops responsibly!
+                `;
+
+                showMessage(successMessage);
+                showBuddyReaction(`🎉 Excellent sale! You earned ${totalValue} coins from your sustainable farming! Keep growing! 💰`, '🌟');
+                updateUI();
+            }
+        }
+
+        // Manure Application System
+        function useManure() {
+            if (gameState.manureProduced === 0) {
+                showMessage('❌ No manure available! Generate manure from organic waste first.');
+                showBuddyReaction('💡 Tip: Generate manure by converting organic waste, then apply it to your plots for better yields!', '💩');
+                return;
+            }
+
+            const manureDisplay = `
+🌱 MANURE APPLICATION SYSTEM 🌱
+
+Available Manure: ${gameState.manureProduced} units
+Manure Quality: ${gameState.manureQuality}%
+
+Application Effects:
+🌱 Soil Health Improvement: +${Math.floor(gameState.manureQuality * 0.3)}%
+📈 Yield Increase: +${Math.floor(gameState.manureQuality * 0.2)}%
+♻️ Sustainability Boost: +${Math.floor(gameState.manureQuality * 0.1)}
+🌿 Carbon Sequestration: +${gameState.manureProduced * 3}
+
+Cost: 1 manure unit per plot
+Empty plots will get soil preparation
+Planted plots will get growth boost
+
+Apply manure to all eligible plots? (Type 'yes' to confirm)
+            `;
+
+            const confirmation = prompt(manureDisplay);
+            if (confirmation && confirmation.toLowerCase() === 'yes') {
+                let plotsAffected = 0;
+                let manureUsed = 0;
+
+                plots.forEach((plot, index) => {
+                    if (gameState.manureProduced > 0 && manureUsed < gameState.manureProduced) {
+                        manureUsed++;
+                        plotsAffected++;
+
+                        // Apply manure benefits
+                        if (!plot.manureApplied) {
+                            plot.manureApplied = true;
+                            plot.soilQuality = Math.min(100, (plot.soilQuality || 50) + Math.floor(gameState.manureQuality * 0.3));
+                            plot.yieldBonus = Math.min(200, (plot.yieldBonus || 0) + Math.floor(gameState.manureQuality * 0.2));
+                        }
+
+                        // If plot has growing crop, boost its growth
+                        if (plot.crop && plot.crop.stage !== 'ready') {
+                            plot.crop.growthBoost = (plot.crop.growthBoost || 1) + 0.3; // 30% faster growth
+                        }
+                    }
+                });
+
+                // Update global stats
+                gameState.manureProduced -= manureUsed;
+                gameState.soilHealth = Math.min(100, gameState.soilHealth + Math.floor(gameState.manureQuality * 0.3));
+                gameState.carbonSequestered += manureUsed * 3;
+                gameState.biodiversityScore = Math.min(100, gameState.biodiversityScore + Math.floor(gameState.manureQuality * 0.1));
+                sustainabilityMetrics.sustainabilityScore = Math.min(100, sustainabilityMetrics.sustainabilityScore + Math.floor(gameState.manureQuality * 0.15));
+
+                const applicationMessage = `
+✅ MANURE APPLICATION COMPLETE! ✅
+
+🎯 Plots Enhanced: ${plotsAffected}
+💩 Manure Used: ${manureUsed} units
+💩 Remaining Manure: ${gameState.manureProduced} units
+
+Global Improvements:
+🌱 Farm Soil Health: ${gameState.soilHealth}%
+🌿 Carbon Sequestered: +${manureUsed * 3}
+♻️ Sustainability Score: ${sustainabilityMetrics.sustainabilityScore}%
+🐛 Biodiversity: ${gameState.biodiversityScore}%
+
+Your crops will grow faster and yield more!
+                `;
+
+                showMessage(applicationMessage);
+                showBuddyReaction(`🌟 Fantastic! Your manure application will boost crop performance significantly! Sustainable farming excellence! 🌱`, '💚');
+                updateUI();
+                drawPlots(); // Redraw to show enhanced plots
+            }
+        }
+
+        function showMessage(message) {
+            console.log(message);
+            // Right-side notification system that doesn't block farm view
+            const badge = document.createElement('div');
+            badge.style.position = 'fixed';
+            badge.style.top = '50%';
+            badge.style.right = '20px';
+            badge.style.transform = 'translateY(-50%)';
+            badge.style.background = 'rgba(0,0,0,0.9)';
+            badge.style.color = 'white';
+            badge.style.padding = '15px';
+            badge.style.borderRadius = '10px';
+            badge.style.zIndex = '500';
+            badge.style.fontFamily = 'inherit';
+            badge.style.fontSize = '12px';
+            badge.style.maxWidth = '280px';
+            badge.style.textAlign = 'left';
+            badge.style.border = '2px solid #4CAF50';
+            badge.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
+            badge.textContent = message;
+            document.body.appendChild(badge);
+            
+            setTimeout(() => {
+                if (document.body.contains(badge)) {
+                    document.body.removeChild(badge);
+                }
+            }, 3000);
+        }
+
+        // 2D grid settings
+        const GRID = {
+            size: 80, // Size of each plot in pixels
+            offsetX: 0,
+            offsetY: 0
+        };
+
+        // Update grid offset to center the farm
+        function updateGridOffset() {
+            GRID.offsetX = canvas.width / 2 - GRID.size * 2;
+            GRID.offsetY = canvas.height / 2 - GRID.size * 2;
+        }
+
+        // Convert world coordinates to screen coordinates
+        function worldToScreen(x, y) {
+            return {
+                x: GRID.offsetX + x * GRID.size,
+                y: GRID.offsetY + y * GRID.size
+            };
+        }
+
+        // Convert screen coordinates to world coordinates
+        function screenToWorld(screenX, screenY) {
+            return {
+                x: Math.floor((screenX - GRID.offsetX) / GRID.size),
+                y: Math.floor((screenY - GRID.offsetY) / GRID.size)
+            };
+        }
+
+        // Find plot at world coordinates
+        function getPlotAt(x, y) {
+            return plots.find(plot => plot.x === x && plot.y === y);
+        }
+
+        // Set game mode
+        function setMode(mode) {
+            gameState.mode = mode;
+            gameState.plantType = null;
+            updateCursor();
+        }
+
+        // Advanced cursor management system
+        function updateCursor() {
+            console.log(`🎯 Updating cursor for mode: ${gameState.mode}`);
+            switch (gameState.mode) {
+                // create-plot is now handled by direct button click
+                case 'remove-plot':
+                    canvas.style.cursor = 'not-allowed';
+                    break;
+                case 'upgrade-plot':
+                    canvas.style.cursor = 'cell';
+                    break;
+                case 'Plant':
+                    if (gameState.selectedSeed) {
+                        // Create custom cursor with seed emoji
+                        const seedEmoji = CROPS[gameState.selectedSeed].emoji;
+                        createCustomCursor(seedEmoji);
+                    } else {
+                        canvas.style.cursor = 'pointer';
+                    }
+                    break;
+                case 'water':
+                    createCustomCursor('💧');
+                    break;
+                case 'harvest':
+                    createCustomCursor('🧺');
+                    break;
+                case 'compost':
+                    createCustomCursor('🍂');
+                    break;
+                case 'fertilizer':
+                    createCustomCursor('🌿');
+                    break;
+                case 'pest-control':
+                    createCustomCursor('🐛');
+                    break;
+                default:
+                    canvas.style.cursor = 'default';
+            }
+        }
+
+        // Create custom cursor with emoji
+        function createCustomCursor(emoji) {
+            try {
+                const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+                    <text x="0" y="24" font-size="20" font-family="Arial">${emoji}</text>
+                </svg>`;
+                const dataUrl = 'data:image/svg+xml;base64,' + btoa(svg);
+                canvas.style.cursor = `url(${dataUrl}) 16 16, auto`;
+            } catch (error) {
+                console.warn('Custom cursor creation failed:', error);
+                canvas.style.cursor = 'pointer';
+            }
+        }
+
+        // Handle mouse clicks
+        canvas.addEventListener('click', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const screenX = event.clientX - rect.left;
+            const screenY = event.clientY - rect.top;
+            const worldPos = screenToWorld(screenX, screenY);
+
+            console.log(`🖱️ Click at screen (${screenX}, ${screenY}) -> world (${worldPos.x}, ${worldPos.y})`);
+            handleAction(worldPos.x, worldPos.y);
+        });
+
+        // Handle actions based on current mode
+        function handleAction(x, y) {
+            console.log('🎯 Action at grid:', x, y, 'Mode:', gameState.mode);
+            console.log('🔍 Mode type:', typeof gameState.mode, 'Mode value:', JSON.stringify(gameState.mode));
+            
+            switch(gameState.mode) {
+                // create-plot is now handled by autoCreatePlot() button directly
+                    
+                case 'remove-plot':
+                    removePlotAt(x, y);
+                    break;
+                    
+                case 'upgrade-plot':
+                    upgradePlotAt(x, y);
+                    break;
+                    
+                case 'Plant':
+                    plantAt(x, y, gameState.selectedSeed);
+                    break;
+                    
+                case 'water':
+                    waterPlantAt(x, y);
+                    break;
+                    
+                case 'harvest':
+                    harvestAt(x, y);
+                    break;
+                    
+                case 'compost':
+                    addCompostAt(x, y);
+                    break;
+                    
+                case 'fertilizer':
+                    addFertilizerAt(x, y);
+                    break;
+                    
+                case 'pest-control':
+                    applyPestControlAt(x, y);
+                    break;
+                    
+                default:
+                    // Normal click - select plot or show info
+                    console.log('⚠️ Fell through to default case - calling selectAt');
+                    selectAt(x, y);
+                    break;
+            }
+            
+            // Clear mode after action (except for continuous modes)
+            if (gameState.mode && !['water', 'harvest', 'compost', 'fertilizer', 'pest-control'].includes(gameState.mode)) {
+                console.log(`🔄 Clearing mode: ${gameState.mode} (not in continuous modes list)`);
+                gameState.mode = null;
+                updateCursor();
+                updateModeDisplay();
+                drawGame();
+            }
+        }
+
+        // Auto create plot in next available position
+        function autoCreatePlot() {
+            console.log('🔨 Auto-creating new plot...');
+            const plotCost = 50;
+            
+            if (gameState.coins < plotCost) {
+                showMessage(`❌ Not enough coins! Need ${plotCost} coins to create a plot.`);
+                return;
+            }
+            
+            const maxPlots = 50;
+            if (plots.length >= maxPlots) {
+                showMessage(`❌ Maximum plots reached! (${maxPlots} plots maximum)`);
+                return;
+            }
+            
+            // Find next available position in a spiral pattern
+            const nextPos = findNextPlotPosition();
+            if (!nextPos) {
+                showMessage('❌ No available space for new plots!');
+                return;
+            }
+            
+            createPlotAt(nextPos.x, nextPos.y);
+        }
+
+        // Find the next available position for a plot in a spiral pattern
+        function findNextPlotPosition() {
+            const maxRadius = 6;
+            
+            // Start from radius 1 and expand outward
+            for (let radius = 1; radius <= maxRadius; radius++) {
+                // Check positions in a square spiral at this radius
+                for (let x = -radius; x <= radius; x++) {
+                    for (let y = -radius; y <= radius; y++) {
+                        // Only check positions on the edge of the current radius
+                        if (Math.max(Math.abs(x), Math.abs(y)) === radius) {
+                            if (!getPlotAt(x, y)) {
+                                return { x: x, y: y };
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return null; // No available position found
+        }
+
+        // Advanced plot creation with smart positioning
+        function createPlotAt(x, y) {
+            console.log(`🔨 Attempting to create plot at (${x}, ${y})`);
+            const plotCost = 50;
+            if (gameState.coins < plotCost) {
+                console.log(`❌ Not enough coins: ${gameState.coins} < ${plotCost}`);
+                showMessage(`❌ Not enough coins! Need ${plotCost} coins to create a plot.`);
+                return;
+            }
+            
+            const maxPlots = 50; // Maximum plots allowed
+            if (plots.length >= maxPlots) {
+                showMessage(`❌ Maximum plots reached! (${maxPlots} plots maximum)`);
+                return;
+            }
+            
+            // Check for existing plot at this location
+            if (getPlotAt(x, y)) {
+                showMessage('❌ Plot already exists at this location!');
+                return;
+            }
+            
+            // Check boundaries
+            if (Math.abs(x) > 6 || Math.abs(y) > 6) {
+                showMessage('❌ Outside farming area! Stay closer to the center of your farm.');
+                return;
+            }
+            
+            // Create new advanced plot
+            const newPlot = {
+                x: x,
+                y: y,
+                crop: null,
+                cropType: null,
+                growth: 0,
+                watered: false,
+                composted: false,
+                plantedAt: null,
+                fullyGrown: false,
+                state: 'empty',
+                selected: false,
+                soilQuality: 'good',
+                soilHealth: 75,
+                upgradeLevel: 1,
+                fertility: 100,
+                pestResistance: 50,
+                waterEfficiency: 1.0,
+                notified: false,
+                plotSize: 1.5,
+                lastHarvested: null,
+                cropHistory: [],
+                sustainabilityBonus: 1.0
+            };
+            
+            plots.push(newPlot);
+            gameState.coins -= plotCost;
+            gameState.xp += 5;
+            
+            console.log(`✅ Plot created successfully! New plot count: ${plots.length}`);
+            showMessage(`🔨 Plot created at (${x}, ${y})! -${plotCost} coins`);
+            updateUI();
+            updateModeDisplay(); // Reset mode display
+            drawGame();
+            
+            // Buddy reacts to plot creation
+            if (plots.length === 4) {
+                showBuddyReaction(`🎉 Your first expansion! I found the perfect spot for this new plot!`, '🤠');
+            } else {
+                const plotReactions = [
+                    `🔨 Great expansion! I placed it in the optimal location for you!`,
+                    `🏗️ Another plot ready for planting! Smart farm layout expanding!`,
+                    `✨ Perfect spot selected! Your farm is growing beautifully!`,
+                    `🌱 More room for crops means more sustainable farming opportunities!`,
+                    `👩‍🌾 Your automated farm layout is looking amazing!`
+                ];
+                const reaction = plotReactions[Math.floor(Math.random() * plotReactions.length)];
+                showBuddyReaction(reaction, '🧑‍🌾');
+            }
+        }
+
+        // Remove plot function
+        function removePlotAt(x, y) {
+            const plot = getPlotAt(x, y);
+            if (!plot) {
+                showMessage('❌ No plot found at this location!');
+                return;
+            }
+            
+            if (plot.crop) {
+                showMessage('❌ Cannot remove plot with crops! Harvest first.');
+                return;
+            }
+            
+            plots = plots.filter(p => p !== plot);
+            gameState.coins += 25; // Refund half the cost
+            showMessage(`🗑️ Plot removed! +25 coins refunded.`);
+            updateUI();
+            drawGame();
+        }
+
+        // Upgrade plot function
+        function upgradePlotAt(x, y) {
+            const plot = getPlotAt(x, y);
+            if (!plot) {
+                showMessage('❌ No plot found at this location!');
+                return;
+            }
+            
+            if (plot.upgradeLevel >= 5) {
+                showMessage('🌟 Plot is already at maximum level!');
+                return;
+            }
+            
+            const upgradeCost = plot.upgradeLevel * 100;
+            if (gameState.coins < upgradeCost) {
+                showMessage(`❌ Not enough coins! Need ${upgradeCost} coins to upgrade.`);
+                return;
+            }
+            
+            plot.upgradeLevel++;
+            plot.soilHealth += 15;
+            plot.fertility += 20;
+            plot.pestResistance += 10;
+            plot.waterEfficiency += 0.1;
+            plot.sustainabilityBonus += 0.2;
+            
+            gameState.coins -= upgradeCost;
+            gameState.xp += plot.upgradeLevel * 10;
+            
+            showMessage(`⭐ Plot upgraded to level ${plot.upgradeLevel}! Enhanced productivity!`);
+            updateUI();
+            drawGame();
+        }
+
+        // Eco Tools Functions
+        function addCompostAt(x, y) {
+            const plot = getPlotAt(x, y);
+            if (!plot) {
+                showMessage('❌ No plot found at this location!');
+                return;
+            }
+            
+            if (gameState.coins < 15) {
+                showMessage('❌ Not enough coins! Compost costs 15 coins.');
+                return;
+            }
+            
+            if (plot.composted) {
+                showMessage('🍂 This plot already has compost!');
+                return;
+            }
+            
+            plot.composted = true;
+            plot.soilHealth += 20;
+            plot.fertility += 15;
+            gameState.coins -= 15;
+            gameState.compostUsed++;
+            
+            showMessage('🍂 Compost added! Soil health improved!');
+            updateSustainabilityScore();
+            updateUI();
+            drawGame();
+            
+            // Buddy reacts to composting
+            const compostReactions = [
+                `🍂 Excellent choice! Compost is nature's way of recycling nutrients!`,
+                `🌱 Perfect! Organic compost makes soil healthy and plants happy!`,
+                `♻️ Great sustainable practice! Your soil will love this natural fertilizer!`,
+                `🌿 Wonderful! Composting reduces waste and enriches the earth!`,
+                `✨ Smart farming! Natural compost is much better than chemicals!`
+            ];
+            const reaction = compostReactions[Math.floor(Math.random() * compostReactions.length)];
+            showBuddyReaction(reaction, '🍂');
+        }
+
+        function addFertilizerAt(x, y) {
+            const plot = getPlotAt(x, y);
+            if (!plot) {
+                showMessage('❌ No plot found at this location!');
+                return;
+            }
+            
+            if (gameState.coins < 20) {
+                showMessage('❌ Not enough coins! Fertilizer costs 20 coins.');
+                return;
+            }
+            
+            plot.fertility += 25;
+            if (plot.crop && plot.growth < 100) {
+                plot.growth += 20; // Speed up current crop growth
+            }
+            
+            gameState.coins -= 20;
+            showMessage('🌿 Fertilizer applied! Growth enhanced!');
+            updateUI();
+            drawGame();
+            
+            // Buddy reacts to fertilizer
+            const fertilizerReactions = [
+                `🌿 Good boost for your crops! They'll grow faster with that fertilizer!`,
+                `⚡ Nice speed enhancement! Your plants will love that growth boost!`,
+                `🚀 Fertilizer power! Watch those crops grow like rockets now!`,
+                `💨 Great timing! Your crops will reach maturity much quicker!`,
+                `✨ Smart use of fertilizer! Faster growth means quicker harvests!`
+            ];
+            const reaction = fertilizerReactions[Math.floor(Math.random() * fertilizerReactions.length)];
+            showBuddyReaction(reaction, '🌿');
+        }
+
+        function applyPestControlAt(x, y) {
+            const plot = getPlotAt(x, y);
+            if (!plot) {
+                showMessage('❌ No plot found at this location!');
+                return;
+            }
+            
+            if (gameState.coins < 10) {
+                showMessage('❌ Not enough coins! Pest control costs 10 coins.');
+                return;
+            }
+            
+            plot.pestResistance = Math.min(100, plot.pestResistance + 30);
+            gameState.coins -= 10;
+            
+            showMessage('🐛 Pest control applied! Crops protected!');
+            updateUI();
+            drawGame();
+            
+            // Buddy reacts to pest control
+            const pestReactions = [
+                `🐛 Smart protection! Your crops are safe from harmful pests now!`,
+                `🛡️ Excellent defense! Pest control keeps your harvest secure!`,
+                `🦟 Great prevention! Healthy crops need protection from bugs!`,
+                `✨ Perfect care! Your plants are well-defended now!`,
+                `🌱 Wise choice! Protected crops grow stronger and healthier!`
+            ];
+            const reaction = pestReactions[Math.floor(Math.random() * pestReactions.length)];
+            showBuddyReaction(reaction, '🛡️');
+        }
+
+        function selectAt(x, y) {
+            const plot = getPlotAt(x, y);
+            
+            // Clear previous selections
+            plots.forEach(p => p.selected = false);
+            
+            if (plot) {
+                plot.selected = true;
+                const cropInfo = plot.crop ? `Crop: ${CROPS[plot.cropType].name} (${Math.floor(plot.growth)}%)` : 'Empty';
+                const healthInfo = `Soil Health: ${plot.soilHealth}% | Level: ${plot.upgradeLevel}`;
+                showMessage(`📍 Selected plot (${x}, ${y}) - ${cropInfo} | ${healthInfo}`);
+                
+                // Show buddy tip for plot selection
+                if (gameState.firstTime) {
+                    showBuddyTip('plot_selected');
+                    gameState.firstTime = false;
+                }
+            } else {
+                showMessage(`📍 No plot at (${x}, ${y}). Use Create Plot mode to build here.`);
+            }
+            
+            drawGame();
+        }
+
+        // Advanced planting system
+        function plantAt(x, y, seedType) {
+            const plot = getPlotAt(x, y);
+            
+            if (!plot) {
+                showMessage('❌ No plot here! Create a plot first.');
+                return;
+            }
+
+            if (plot.crop) {
+                showMessage('❌ Plot already has a crop! Harvest first.');
+                return;
+            }
+
+            if (!seedType || gameState.inventory[seedType] <= 0) {
+                showMessage(`❌ No ${seedType} seeds available!`);
+                return;
+            }
+
+            // Check seed cost
+            const crop = CROPS[seedType];
+            if (gameState.coins < crop.seedCost) {
+                showMessage(`❌ Not enough coins! ${crop.name} seeds cost ${crop.seedCost} coins.`);
+                return;
+            }
+
+            // Plant the crop with advanced properties
+            plot.crop = seedType;
+            plot.cropType = seedType;
+            plot.growth = 0;
+            plot.plantedAt = Date.now();
+            plot.fullyGrown = false;
+            plot.watered = false;
+            plot.state = 'planted';
+            
+            // Add to crop history for rotation tracking
+            plot.cropHistory.push({
+                crop: seedType,
+                plantedAt: Date.now()
+            });
+
+            // Deduct costs and inventory
+            gameState.inventory[seedType]--;
+            gameState.coins -= crop.seedCost;
+            gameState.xp += 5;
+            gameState.totalPlanted++;
+            
+            // Apply sustainability effects
+            applySoilHealthEffect(plot, crop);
+            updateSustainabilityScore();
+            
+            updateUI();
+            showMessage(`🌱 Planted ${crop.name}! Growth time: ${crop.growthTime/1000}s`);
+            console.log(`Planted ${seedType} at (${x}, ${y})`);
+            
+            // Buddy always reacts to planting
+            if (gameState.totalPlanted === 1) {
+                showBuddyReaction(`🎉 Congratulations on planting your first ${crop.name}! This is the start of your farming journey!`, '🤠');
+            } else {
+                const plantingReactions = [
+                    `🌱 Great choice planting ${crop.name}! Your farm is growing beautifully!`,
+                    `👩‍🌾 Another ${crop.name} planted! I can see your farming skills improving!`,
+                    `🌿 ${crop.name} is a wonderful crop! Keep up the sustainable farming!`,
+                    `✨ Perfect planting! ${crop.name} will love this soil!`,
+                    `🌾 Nice work! Your ${crop.name} will grow strong and healthy!`
+                ];
+                const reaction = plantingReactions[Math.floor(Math.random() * plantingReactions.length)];
+                showBuddyReaction(reaction, '👩‍🌾');
+            }
+        }
+
+        // Apply soil health effects from crops
+        function applySoilHealthEffect(plot, crop) {
+            switch (crop.soilHealth) {
+                case 'improves':
+                    plot.soilHealth = Math.min(100, plot.soilHealth + 5);
+                    break;
+                case 'depletes':
+                    plot.soilHealth = Math.max(0, plot.soilHealth - 3);
+                    break;
+                case 'neutral':
+                default:
+                    // No change
+                    break;
+            }
+        }
+
+        // Advanced watering system
+        function waterPlantAt(x, y) {
+            const plot = getPlotAt(x, y);
+            
+            if (!plot) {
+                showMessage('❌ No plot found at this location!');
+                return;
+            }
+            
+            if (!plot.crop) {
+                showMessage('❌ No crop to water here!');
+                return;
+            }
+
+            if (plot.watered) {
+                showMessage('💧 Crop is already watered!');
+                return;
+            }
+
+            plot.watered = true;
+            
+            // Apply water efficiency bonus from plot upgrades
+            const waterBonus = plot.waterEfficiency;
+            if (plot.growth < 100) {
+                plot.growth += 5 * waterBonus; // Extra growth from watering
+            }
+            
+            gameState.xp += 2;
+            
+            showMessage('💧 Crop watered! Growth enhanced!');
+            updateUI();
+            drawGame();
+            
+            // Buddy reacts to watering
+            const waterReactions = [
+                `💧 Great job watering! Your crops love the hydration and will grow stronger!`,
+                `🌊 Perfect watering technique! You're taking such good care of your plants!`,
+                `💦 Excellent! Well-watered crops grow faster and healthier!`,
+                `🌿 That plant is so happy now! Water is the key to healthy growth!`,
+                `✨ Nice work! Your sustainable watering practices are amazing!`
+            ];
+            const reaction = waterReactions[Math.floor(Math.random() * waterReactions.length)];
+            showBuddyReaction(reaction, '💧');
+        }
+
+        // Advanced harvesting system
+        function harvestAt(x, y) {
+            const plot = getPlotAt(x, y);
+            
+            if (!plot) {
+                showMessage('❌ No plot found at this location!');
+                return;
+            }
+            
+            if (!plot.crop) {
+                showMessage('❌ No crop to harvest here!');
+                return;
+            }
+
+            if (!plot.fullyGrown) {
+                const remainingTime = Math.ceil((100 - plot.growth) * CROPS[plot.cropType].growthTime / 100 / 1000);
+                showMessage(`🕐 Crop not ready! About ${remainingTime}s remaining.`);
+                return;
+            }
+
+            const crop = CROPS[plot.cropType];
+            let earnings = crop.sellPrice;
+            
+            // Apply various bonuses
+            if (plot.watered) earnings *= 1.3; // Watering bonus
+            if (plot.composted) earnings *= 1.2; // Compost bonus
+            earnings *= plot.sustainabilityBonus; // Sustainability bonus
+            earnings *= (plot.upgradeLevel * 0.1 + 1); // Level bonus
+            
+            // Seasonal effects
+            const seasonBonus = season.seasonEffects[season.current].growthBonus || 1;
+            earnings *= seasonBonus;
+            
+            // Add to harvested inventory
+            if (!gameState.harvested[plot.cropType]) {
+                gameState.harvested[plot.cropType] = 0;
+            }
+            gameState.harvested[plot.cropType]++;
+            
+            gameState.coins += Math.floor(earnings);
+            gameState.xp += 15 + (plot.upgradeLevel * 3);
+            gameState.totalHarvested++;
+            
+            // Reset plot but keep improvements
+            const oldCompost = plot.composted;
+            plot.crop = null;
+            plot.cropType = null;
+            plot.growth = 0;
+            plot.watered = false;
+            plot.plantedAt = null;
+            plot.fullyGrown = false;
+            plot.state = 'empty';
+            plot.selected = false;
+            plot.composted = false; // Compost is consumed
+            plot.lastHarvested = Date.now();
+            
+            // Soil health recovery after harvest
+            if (oldCompost) {
+                plot.soilHealth = Math.min(100, plot.soilHealth + 5);
+            }
+            
+            updateSustainabilityScore();
+            showMessage(`🧺 Harvested ${crop.name} for ${Math.floor(earnings)} coins!`);
+            updateUI();
+            drawGame();
+            
+            // Buddy always reacts to harvesting
+            const harvestReactions = [
+                `🎉 Excellent harvest! You earned ${Math.floor(earnings)} coins from that ${crop.name}!`,
+                `🧺 Great job harvesting! Your farming skills are really showing!`,
+                `💰 Wow! ${Math.floor(earnings)} coins from that ${crop.name}! You're becoming quite the farmer!`,
+                `🌟 Perfect timing on that harvest! Fresh ${crop.name} tastes the best!`,
+                `👩‍🌾 Another successful harvest! Your sustainable farming is paying off!`,
+                `✨ Beautiful ${crop.name}! I can see all your hard work in this harvest!`
+            ];
+            const reaction = harvestReactions[Math.floor(Math.random() * harvestReactions.length)];
+            showBuddyReaction(reaction, '🤠');
+        }
+
+        // Sustainability scoring system
+        function updateSustainabilityScore() {
+            let score = 50; // Base score
+            
+            // Soil health contribution
+            const avgSoilHealth = plots.reduce((sum, p) => sum + p.soilHealth, 0) / plots.length || 0;
+            score += avgSoilHealth * 0.2;
+            
+            // Organic practices (compost usage)
+            if (gameState.compostUsed > 0) {
+                score += Math.min(20, gameState.compostUsed * 2);
+            }
+            
+            // Crop diversity
+            const uniqueCrops = new Set(plots.filter(p => p.crop).map(p => p.cropType)).size;
+            score += uniqueCrops * 5;
+            
+            // Weather integration bonus
+            if (weather.current === 'rainy') {
+                score += 5; // Natural watering bonus
+            }
+            
+            // Update metrics
+            sustainabilityMetrics.sustainabilityScore = Math.min(100, Math.max(0, score));
+            
+            // Update rating based on score
+            if (sustainabilityMetrics.sustainabilityScore >= 90) {
+                sustainabilityMetrics.sustainabilityRating = 'Eco Master';
+            } else if (sustainabilityMetrics.sustainabilityScore >= 70) {
+                sustainabilityMetrics.sustainabilityRating = 'Green Farmer';
+            } else if (sustainabilityMetrics.sustainabilityScore >= 50) {
+                sustainabilityMetrics.sustainabilityRating = 'Learning Farmer';
+            } else {
+                sustainabilityMetrics.sustainabilityRating = 'Beginner';
+            }
+            
+            sustainabilityMetrics.lastUpdated = Date.now();
+        }
+
+        // Weather update system
+        function updateWeather() {
+            const now = Date.now();
+            
+            // Change weather every 2 minutes
+            if (now - weather.lastChange > weather.duration) {
+                const weatherTypes = ['sunny', 'cloudy', 'rainy', 'stormy'];
+                const currentIndex = weatherTypes.indexOf(weather.current);
+                weather.current = weatherTypes[(currentIndex + 1) % weatherTypes.length];
+                weather.lastChange = now;
+                
+                // Apply weather effects
+                if (weather.current === 'rainy') {
+                    // Auto-water all crops
+                    plots.forEach(plot => {
+                        if (plot.crop && !plot.watered) {
+                            plot.watered = true;
+                        }
+                    });
+                    showMessage('🌧️ Rain is watering your crops naturally!');
+                }
+                
+                updateWeatherDisplay();
+            }
+        }
+
+        function updateWeatherDisplay() {
+            const weatherElement = document.getElementById('weather');
+            if (weatherElement) {
+                const weatherEmojis = {
+                    'sunny': '☀️ Sunny',
+                    'cloudy': '☁️ Cloudy', 
+                    'rainy': '🌧️ Rainy',
+                    'stormy': '⛈️ Stormy'
+                };
+                weatherElement.textContent = weatherEmojis[weather.current] || '☀️ Sunny';
+            }
+        }
+
+        // Season update system
+        function updateSeason() {
+            const now = Date.now();
+            
+            // Change season every minute
+            if (now - season.lastChange > season.dayLength) {
+                season.day++;
+                season.totalDays++;
+                
+                // Change season every 7 days
+                if (season.day > 7) {
+                    const seasons = ['spring', 'summer', 'autumn', 'winter'];
+                    const currentIndex = seasons.indexOf(season.current);
+                    season.current = seasons[(currentIndex + 1) % seasons.length];
+                    season.day = 1;
+                    
+                    showMessage(`🗓️ Season changed to ${season.current}!`);
+                    updateSeasonDisplay();
+                }
+                
+                season.lastChange = now;
+            }
+        }
+
+        function updateSeasonDisplay() {
+            const seasonElement = document.getElementById('season');
+            if (seasonElement) {
+                const seasonEmojis = {
+                    'spring': '🌸 Spring',
+                    'summer': '☀️ Summer',
+                    'autumn': '🍂 Autumn', 
+                    'winter': '❄️ Winter'
+                };
+                seasonElement.textContent = seasonEmojis[season.current] || '🌸 Spring';
+            }
+        }
+
+        // Harvest crop
+        function harvestCrop(x, y) {
+            const plot = getPlotAt(x, y);
+            
+            if (!plot || !plot.crop) {
+                showMessage('No crop to harvest here!');
+                return;
+            }
+
+            if (!plot.fullyGrown) {
+                showMessage('Crop is not ready to harvest yet!');
+                return;
+            }
+
+            const crop = CROPS[plot.crop];
+            const cropType = plot.crop;
+            const harvestAmount = 1; // Base harvest amount
+            
+            // Apply manure benefits to harvest
+            const manureBonus = gameState.manureEffects.yieldBonus / 100;
+            const actualHarvest = Math.floor(harvestAmount * (1 + manureBonus));
+            
+            // Store harvested crops in inventory instead of auto-selling
+            gameState.harvested[cropType] += actualHarvest;
+            gameState.xp += 15;
+            gameState.totalHarvested += actualHarvest;
+            
+            // Generate waste items from harvest
+            generateWasteFromHarvest(cropType, actualHarvest);
+            
+            // Reset plot
+            plot.crop = null;
+            plot.growth = 0;
+            plot.watered = false;
+            plot.plantedAt = null;
+            plot.fullyGrown = false;
+            
+            updateUI();
+            
+            const bonusText = manureBonus > 0 ? ` (+${Math.floor(manureBonus * 100)}% manure bonus!)` : '';
+            showMessage(`Harvested ${actualHarvest} ${crop.name}${bonusText} - Check inventory to sell!`);
+        }
+
+        // Update crop growth
+        function updateGrowth() {
+            const currentTime = Date.now();
+            
+            plots.forEach(plot => {
+                if (plot.crop && plot.plantedAt && !plot.fullyGrown) {
+                    const elapsed = currentTime - plot.plantedAt;
+                    const growthTime = CROPS[plot.crop].growthTime;
+                    const growthRate = plot.watered ? 1.5 : 1; // Watered crops grow faster
+                    
+                    plot.growth = Math.min(100, (elapsed / growthTime) * 100 * growthRate);
+                    
+                    if (plot.growth >= 100) {
+                        plot.fullyGrown = true;
+                    }
+                }
+            });
+        }
+
+        // Draw the game
+        function drawGame() {
+            // Clear canvas
+            ctx.fillStyle = '#228B22'; // Green background
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            console.log(`🖼️ Canvas size: ${canvas.width}x${canvas.height}`);
+            updateGridOffset();
+            drawPlots();
+            drawCrops();
+            drawHoverEffect();
+        }
+
+        // Draw farm plots
+        function drawPlots() {
+            console.log(`🎨 Drawing ${plots.length} plots...`);
+            console.log(`📍 Grid offset: (${GRID.offsetX}, ${GRID.offsetY}), Grid size: ${GRID.size}`);
+            
+            plots.forEach((plot, index) => {
+                const screenPos = worldToScreen(plot.x, plot.y);
+                console.log(`Plot ${index}: world(${plot.x}, ${plot.y}) -> screen(${screenPos.x}, ${screenPos.y})`);
+                
+                // Plot background
+                ctx.fillStyle = plot.watered ? '#8B4513' : '#D2B48C'; // Brown soil
+                ctx.fillRect(screenPos.x, screenPos.y, GRID.size, GRID.size);
+                
+                // Plot border
+                ctx.strokeStyle = '#654321';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(screenPos.x, screenPos.y, GRID.size, GRID.size);
+            });
+        }
+
+        // Draw crops on plots
+        function drawCrops() {
+            ctx.font = '40px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            plots.forEach(plot => {
+                if (plot.crop) {
+                    const screenPos = worldToScreen(plot.x, plot.y);
+                    const centerX = screenPos.x + GRID.size / 2;
+                    const centerY = screenPos.y + GRID.size / 2;
+                    
+                    if (plot.fullyGrown) {
+                        // Full grown crop
+                        ctx.fillText(CROPS[plot.crop].emoji, centerX, centerY);
+                    } else {
+                        // Growing crop (smaller)
+                        const scale = 0.3 + (plot.growth / 100) * 0.7;
+                        ctx.save();
+                        ctx.translate(centerX, centerY);
+                        ctx.scale(scale, scale);
+                        ctx.fillText('🌱', 0, 0);
+                        ctx.restore();
+                    }
+                    
+                    // Growth bar
+                    if (!plot.fullyGrown) {
+                        const barWidth = GRID.size - 10;
+                        const barHeight = 6;
+                        const barX = screenPos.x + 5;
+                        const barY = screenPos.y + GRID.size - 15;
+                        
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                        ctx.fillRect(barX, barY, barWidth, barHeight);
+                        
+                        ctx.fillStyle = plot.watered ? '#00FF00' : '#FFFF00';
+                        ctx.fillRect(barX, barY, (barWidth * plot.growth) / 100, barHeight);
+                    }
+                }
+            });
+        }
+
+        // Draw hover effect for current mode
+        function drawHoverEffect() {
+            // This would be enhanced with mouse tracking
+        }
+
+        // Enhanced UI update function
+        function updateUI() {
+            // Basic stats
+            document.getElementById('coins').textContent = gameState.coins;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('xp').textContent = gameState.xp;
+            document.getElementById('plotCount').textContent = plots.length;
+            
+            // Inventory counts
+            document.getElementById('wheatCount').textContent = gameState.inventory.wheat || 0;
+            document.getElementById('carrotCount').textContent = gameState.inventory.carrot || 0;
+            document.getElementById('pumpkinCount').textContent = gameState.inventory.pumpkin || 0;
+            document.getElementById('tomatoCount').textContent = gameState.inventory.tomato || 0;
+            document.getElementById('cornCount').textContent = gameState.inventory.corn || 0;
+            
+            // Harvested crops counts
+            document.getElementById('harvestedWheat').textContent = gameState.harvested.wheat || 0;
+            document.getElementById('harvestedCarrot').textContent = gameState.harvested.carrot || 0;
+            document.getElementById('harvestedPumpkin').textContent = gameState.harvested.pumpkin || 0;
+            document.getElementById('harvestedTomato').textContent = gameState.harvested.tomato || 0;
+            document.getElementById('harvestedCorn').textContent = gameState.harvested.corn || 0;
+            
+            // Advanced metrics
+            const sustainabilityElement = document.getElementById('sustainability');
+            if (sustainabilityElement) {
+                sustainabilityElement.textContent = `${Math.floor(sustainabilityMetrics.sustainabilityScore)}%`;
+            }
+            
+            // Manure and waste information
+            const manureElement = document.getElementById('manure');
+            if (manureElement) {
+                const manureDisplay = gameState.compostingActive ? 
+                    `${gameState.manureProduced} (🔄 Processing...)` : 
+                    `${gameState.manureProduced}`;
+                manureElement.textContent = manureDisplay;
+            }
+            
+            const wasteElement = document.getElementById('wasteCount');
+            if (wasteElement) {
+                const totalWaste = gameState.wasteItems.rottenCrops + 
+                                  gameState.wasteItems.cropResidues + 
+                                  gameState.wasteItems.spoiledSeeds + 
+                                  gameState.wasteItems.organicMatter;
+                wasteElement.textContent = totalWaste;
+            }
+            
+            // Update manure button text with available waste
+            const manureBtn = document.getElementById('manureBtn');
+            if (manureBtn) {
+                const totalWaste = gameState.wasteItems.rottenCrops + 
+                                  gameState.wasteItems.cropResidues + 
+                                  gameState.wasteItems.spoiledSeeds + 
+                                  gameState.wasteItems.organicMatter;
+                
+                if (gameState.compostingActive) {
+                    manureBtn.textContent = '⏳ Processing...';
+                    manureBtn.disabled = true;
+                } else if (totalWaste > 0) {
+                    manureBtn.textContent = `💩 Generate Manure (${totalWaste})`;
+                    manureBtn.disabled = false;
+                } else {
+                    manureBtn.textContent = '💩 Generate Manure';
+                    manureBtn.disabled = false;
+                }
+            }
+            
+            // Update weather and season displays
+            updateWeatherDisplay();
+            updateSeasonDisplay();
+        }
+
+        // Show welcome message in bottom right
+        function showWelcomeMessage(text) {
+            console.log(text);
+            // Create welcome message display
+            const messageDiv = document.createElement('div');
+            messageDiv.id = 'welcomeMessage';
+            messageDiv.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                transform: none;
+                background: linear-gradient(135deg, #4CAF50, #2E7D32);
+                color: white;
+                padding: 15px;
+                border-radius: 10px;
+                font-family: 'Press Start 2P';
+                font-size: 10px;
+                z-index: 999;
+                max-width: 280px;
+                text-align: center;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                border: 2px solid #81C784;
+                transition: all 0.5s ease-in-out;
+                white-space: pre-line;
+                opacity: 0;
+            `;
+            messageDiv.textContent = text;
+            document.body.appendChild(messageDiv);
+            
+            // Fade in immediately
+            setTimeout(() => {
+                messageDiv.style.opacity = '1';
+            }, 100);
+            
+            // Remove after 8 seconds
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.style.opacity = '0';
+                    setTimeout(() => {
+                        if (messageDiv.parentNode) {
+                            document.body.removeChild(messageDiv);
+                        }
+                    }, 500);
+                }
+            }, 8000);
+        }
+
+        // Show temporary message (positioned on the right side to not block farm view)
+        let messageTimeout;
+        function showMessage(text) {
+            console.log(text);
+            // Create temporary message display
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                right: 20px;
+                transform: translateY(-50%);
+                background: rgba(0, 0, 0, 0.9);
+                color: white;
+                padding: 15px;
+                border-radius: 10px;
+                font-family: 'Press Start 2P';
+                font-size: 11px;
+                z-index: 500;
+                max-width: 280px;
+                text-align: left;
+                border: 2px solid #4CAF50;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                animation: slideInFromRight 0.3s ease-out;
+            `;
+            messageDiv.textContent = text;
+            document.body.appendChild(messageDiv);
+            
+            clearTimeout(messageTimeout);
+            messageTimeout = setTimeout(() => {
+                if (document.body.contains(messageDiv)) {
+                    messageDiv.style.animation = 'slideOutToRight 0.3s ease-in';
+                    setTimeout(() => {
+                        if (document.body.contains(messageDiv)) {
+                            document.body.removeChild(messageDiv);
+                        }
+                    }, 300);
+                }
+            }, 3000);
+        }
+
+        // Enhanced game loop with all systems
+        function gameLoop() {
+            updateGrowth();
+            updateWeather();
+            updateSeason();
+            updateSustainabilityScore();
+            drawGame();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize game with all systems
+        function initGame() {
+            console.log('🌾 Initializing ZONORG Advanced Farm Game...');
+            
+            // Initialize authentication
+            initializeAuth();
+            
+            // Initialize displays
+            updateUI();
+            updateCursor();
+            updateModeDisplay();
+            updateWeatherDisplay();
+            updateSeasonDisplay();
+            updateBuddyDisplay();
+            
+            // Start game loop
+            gameLoop();
+            
+            // Set up auto-save every 30 seconds for authenticated users
+            if (gameMode === 'user' && userId) {
+                setInterval(() => {
+                    console.log('🔄 Auto-saving game...');
+                    saveGame();
+                }, 30000);
+            }
+            
+            // Set up auto-save for guests every 60 seconds (local only)
+            if (gameMode === 'guest') {
+                setInterval(() => {
+                    console.log('💾 Auto-saving locally...');
+                    saveGame();
+                }, 60000);
+            }
+            
+            // Set up periodic crop spoilage and waste generation checks
+            setInterval(() => {
+                checkCropSpoilage();
+                
+                // Occasionally generate random organic matter from environmental factors
+                if (Math.random() < 0.1) { // 10% chance every interval
+                    addWasteItems('organicMatter', 1);
+                }
+            }, 45000); // Check every 45 seconds
+            
+            // Add some initial waste items for testing the manure system
+            if (gameState.firstTime) {
+                addWasteItems('organicMatter', 2);
+                addWasteItems('cropResidues', 1);
+                gameState.firstTime = false;
+            }
+            
+            // Welcome message
+            setTimeout(() => {
+                showWelcomeMessage('🌾 Welcome to ZONORG Advanced Farm! 🌾\n\n🔨 Create plots, 🌱 plant crops, and 🌍 farm sustainably!\n\n♻️ Try the new Manure Generator to turn waste into valuable fertilizer!\n\nClick anywhere to start farming!');
+            }, 500);
+            
+            console.log('✅ Game initialized successfully with all advanced features!');
+        }
+
+        // Add event listeners for all buttons
+        function setupEventListeners() {
+            // Mode action buttons
+            document.getElementById('createPlotBtn').addEventListener('click', autoCreatePlot);
+            document.getElementById('removePlotBtn').addEventListener('click', () => setGameMode('remove-plot'));
+            document.getElementById('upgradePlotBtn').addEventListener('click', () => setGameMode('upgrade-plot'));
+            document.getElementById('waterBtn').addEventListener('click', () => setGameMode('water'));
+            document.getElementById('harvestBtn').addEventListener('click', () => setGameMode('harvest'));
+            
+            // Seed planting buttons
+            document.getElementById('wheatBtn').addEventListener('click', () => setPlantMode('wheat'));
+            document.getElementById('carrotBtn').addEventListener('click', () => setPlantMode('carrot'));
+            document.getElementById('pumpkinBtn').addEventListener('click', () => setPlantMode('pumpkin'));
+            document.getElementById('tomatoBtn').addEventListener('click', () => setPlantMode('tomato'));
+            document.getElementById('cornBtn').addEventListener('click', () => setPlantMode('corn'));
+            
+            // Eco tools buttons
+            document.getElementById('compostBtn').addEventListener('click', () => setGameMode('compost'));
+            document.getElementById('fertilizerBtn').addEventListener('click', () => setGameMode('fertilizer'));
+            document.getElementById('pestControlBtn').addEventListener('click', () => setGameMode('pest-control'));
+            document.getElementById('manureBtn').addEventListener('click', generateManure);
+            
+            // Action buttons
+            document.getElementById('buySeedsBtn').addEventListener('click', buySeeds);
+            document.getElementById('saveBtn').addEventListener('click', saveGame);
+            document.getElementById('loadBtn').addEventListener('click', loadGame);
+            document.getElementById('statsBtn').addEventListener('click', showStats);
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            document.getElementById('sellCropsBtn').addEventListener('click', sellCrops);
+            document.getElementById('useManureBtn').addEventListener('click', useManure);
+            
+            // Buddy buttons
+            document.getElementById('nextTipBtn').addEventListener('click', showNextTip);
+            document.getElementById('buddyHelpBtn').addEventListener('click', askBuddyHelp);
+            document.getElementById('encourageBtn').addEventListener('click', showBuddyEncouragement);
+        }
+
+        // Start the game
+        setupEventListeners();
+        initGame();
+    </script>
+</body>
+</html>
